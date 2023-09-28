@@ -1,1 +1,1 @@
-# 3-sem-project
+# 3rd Semester Project
