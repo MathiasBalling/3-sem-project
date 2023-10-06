@@ -1,0 +1,17 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-I",
+      "/opt/homebrew/Cellar/portaudio/19.7.0/include",
+      "-std=c++11",
+      "-o",
+      "out",
+      "paex_sine.cpp"
+    ],
+    "directory": "/Users/mathiaschristiansen/Projects/3-sem-project",
+    "file": "/Users/mathiaschristiansen/Projects/3-sem-project/paex_sine.cpp",
+    "output": "/Users/mathiaschristiansen/Projects/3-sem-project/out"
+  }
+]
