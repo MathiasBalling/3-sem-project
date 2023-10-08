@@ -1,5 +1,5 @@
 TARGET = PAsound
-SRC = paex_sine.cpp
+SRC = main.cpp PAsound.cpp
 
 INCLUDE = -I /opt/homebrew/Cellar/portaudio/19.7.0/include
 LIBS = -lportaudio
@@ -11,6 +11,7 @@ CXX = g++
 FLAGS = -std=c++11
 
 all: $(TARGET)
+	@./$(TARGET)
 
 $(TARGET): $(SRC)
 	$(CXX) $(INCLUDE) $(FLAGS) $(SRC) -o $(TARGET) $(LIBS)
