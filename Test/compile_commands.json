@@ -1,0 +1,32 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-I",
+      "/opt/homebrew/Cellar/portaudio/19.7.0/include",
+      "-std=c++11",
+      "-o",
+      "PAsound",
+      "main.cpp"
+    ],
+    "directory": "/Users/mathiaschristiansen/Projects/3-sem-project/Test",
+    "file": "/Users/mathiaschristiansen/Projects/3-sem-project/Test/main.cpp",
+    "output": "/Users/mathiaschristiansen/Projects/3-sem-project/Test/PAsound"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-I",
+      "/opt/homebrew/Cellar/portaudio/19.7.0/include",
+      "-std=c++11",
+      "-o",
+      "PAsound",
+      "PAsound.cpp"
+    ],
+    "directory": "/Users/mathiaschristiansen/Projects/3-sem-project/Test",
+    "file": "/Users/mathiaschristiansen/Projects/3-sem-project/Test/PAsound.cpp",
+    "output": "/Users/mathiaschristiansen/Projects/3-sem-project/Test/PAsound"
+  }
+]

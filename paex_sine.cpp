@@ -5,7 +5,7 @@
 
 #define NUM_SECONDS (2)
 #define SAMPLE_RATE (44100)
-#define FRAMES_PER_BUFFER (64)
+#define FRAMES_PER_BUFFER (200)
 
 #ifndef M_PI
 #define M_PI (3.14159265)
@@ -100,23 +100,23 @@ int main(void) {
   if (err != paNoError)
     goto error;
 
-  // err = Pa_SetStreamFinishedCallback(stream, &StreamFinished);
-  // if (err != paNoError)
-  //   goto error;
+  err = Pa_SetStreamFinishedCallback(stream, &StreamFinished);
+  if (err != paNoError)
+    goto error;
 
-  // err = Pa_StartStream(stream);
-  // if (err != paNoError)
-  //   goto error;
+  err = Pa_StartStream(stream);
+  if (err != paNoError)
+    goto error;
 
   printf("Play for %d seconds.\n", NUM_SECONDS);
   Pa_Sleep(NUM_SECONDS * 1000);
   std::cout << "timeinfo: " << totalFrames << std::endl;
 
-  // err = Pa_StopStream(stream);
-  // if (err != paNoError)
-  //   goto error;
+  err = Pa_StopStream(stream);
+  if (err != paNoError)
+    goto error;
 
-  // err = Pa_CloseStream(stream);
+  err = Pa_CloseStream(stream);
   if (err != paNoError)
     goto error;
 
