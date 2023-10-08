@@ -83,7 +83,10 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
       }
       soundObject = sound->getQueue()->front();
     }
-    *out++ = soundObject.buffer[i];
+    *out++ = (float)((sin(soundObject.freq1 * soundObject.time * 2 * M_PI) +
+                      sin(soundObject.freq2 * soundObject.time * 2 * M_PI)) /
+                     2);
+    soundObject.time += dTime;
     soundObject.samplesLeft--;
   }
 
@@ -100,39 +103,13 @@ void PAsound::wait() {
   } while (streamActive);
 }
 
-void PAsound::play(float freq1, float freq2, int duration) {
-  SoundObject sound({freq1, freq2, duration * SAMPLE_RATE / 1000});
-  // Generate samples
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    sound.buffer[i] = (float)((sin(freq1 * i / SAMPLE_RATE * 2 * M_PI) +
-                               sin(freq2 * i / SAMPLE_RATE * 2 * M_PI)) /
-                              2);
-  }
+void PAsound::play(float freq1, float freq2, int ms_duration) {
+  SoundObject sound({freq1, freq2, ms_duration * SAMPLE_RATE / 1000, 0});
   soundQueue.push(sound);
-  sound.time = 0;
   if (Pa_IsStreamStopped(stream)) {
     std::cout << "starting stream" << std::endl;
     Pa_StartStream(stream);
   }
 }
-
-// void PAsound::generateSamples(SoundObject &sound) {
-//   std::cout << "generateSamples" << std::endl;
-//   for (int i = 0; i < BUFFER_SIZE; i++) {
-//     if (soundQueue.empty()) {
-//       buffer[i] = 0;
-//     } else {
-//       SoundObject &sound = soundQueue.front();
-//       buffer[i] = (float)(sin(sound.freq1 * i / SAMPLE_RATE * 2 * M_PI) +
-//                           sin(sound.freq2 * i / SAMPLE_RATE * 2 * M_PI)) /
-//                   2;
-//       std::cout << buffer[i] << std::endl;
-//       sound.samplesLeft--;
-//       if (sound.samplesLeft == 0) {
-//         soundQueue.pop();
-//       }
-//     }
-//   }
-// }
 
 bool PAsound::isQueueEmpty() { return soundQueue.empty(); }

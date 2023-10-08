@@ -5,13 +5,12 @@
 #include <sys/types.h>
 
 #define SAMPLE_RATE (44100)
-#define BUFFER_SIZE (200)
+#define BUFFER_SIZE (1024)
 
 struct SoundObject {
   double freq1;
   double freq2;
   int samplesLeft;
-  float buffer[BUFFER_SIZE];
   float time;
 };
 
@@ -30,7 +29,6 @@ class PAsound {
 
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
-  // void generateSamples(SoundObject &sound);
 
 public:
   PAsound();
