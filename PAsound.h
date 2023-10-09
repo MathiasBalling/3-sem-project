@@ -67,7 +67,7 @@ class PAsound {
 public:
   PAsound();
   ~PAsound();
-  void init();
+  void init(bool verbose = false);
   void findDevices();
   void setOutputDevice(int outDevice);
   void setInputDevice(int inDevice);

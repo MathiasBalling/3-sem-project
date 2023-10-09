@@ -32,8 +32,10 @@ void PAsound::findDevices() {
   }
 }
 
-void PAsound::init() {
-  int input;
+void PAsound::init(bool verbose) {
+  if(verbose) {
+    findDevices();
+    int input;
   std::cout << "Default output device: " << outputDevice << std::endl;
   std::cout << "Enter output device (-1 for default): ";
   std::cin >> input;
@@ -57,7 +59,7 @@ void PAsound::init() {
     inputDevice = input;
   }
   std::cout << std::endl;
-
+  }
   // Set up output stream
   outputParameters.device = outputDevice;
   if (outputParameters.device == paNoDevice) {
