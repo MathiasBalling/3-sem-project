@@ -67,15 +67,6 @@ std::vector<DTMF> dataToDTMF(Operation op, int data) {
 }
 
 int main() {
-  // With 12 bits:0123456789AB
-  //* start
-  // # end
-  // 0 Divider
-  // D Wall
-
-  // * 1 0 B 0 3 #
-  // * 5 D 55#
-
   int data = 1283;
   std::vector<DTMF> result = dataToDTMF(Operation::coordinate, data);
   for (auto i : result) {

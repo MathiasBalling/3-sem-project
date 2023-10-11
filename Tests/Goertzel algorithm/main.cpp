@@ -87,7 +87,7 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
   char dtmf_char = dtmf[row][col];
 
   printf("The DTMF sound is: %c\n", dtmf_char);
-  return dtmf_char;0
+  return dtmf_char;
 }
 
 int main() {
