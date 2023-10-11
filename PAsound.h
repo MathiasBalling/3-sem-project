@@ -11,7 +11,7 @@
 
 // Constants
 #define BUFFER_SIZE (500)
-static double inputSampleRate = 44100;
+static double inputSampleRate = 10000;
 static double outputSampleRate = 44100;
 static float dTime = 1. / outputSampleRate;
 
@@ -62,7 +62,6 @@ class PAsound {
   // Device variables
   int outputDevice;
   int inputDevice;
-
 
 public:
   PAsound();

@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
   PAsound sound;
   sound.init(false);
 
-  int duration = 10;
+  int duration = 100;
     sound.play(dtmf.One, duration);   // 1
     sound.play(dtmf.Two, duration);   // 2
     sound.play(dtmf.Three, duration); // 3
@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     sound.play(dtmf.Five, duration);  // 4
     sound.play(dtmf.Six, duration);   // 5
     sound.play(dtmf.B, duration);     // 0
+    Pa_Sleep(1000);
     sound.play(dtmf.Seven, duration); // 6
     sound.play(dtmf.Eight, duration); // B
     sound.play(dtmf.Nine, duration);  // 7

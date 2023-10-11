@@ -4,7 +4,7 @@
 PAsound::PAsound() {
   // PortAudio Initialization
   Pa_Initialize();
-  std::cout << "PAsound initialized" << std::endl;
+  std::cout << "PortAudio initialized" << std::endl;
   outputDevice = Pa_GetDefaultOutputDevice();
   inputDevice = Pa_GetDefaultInputDevice();
   outputSampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
@@ -33,33 +33,34 @@ void PAsound::findDevices() {
 }
 
 void PAsound::init(bool verbose) {
-  if(verbose) {
+  if (verbose) {
     findDevices();
     int input;
-  std::cout << "Default output device: " << outputDevice << std::endl;
-  std::cout << "Enter output device (-1 for default): ";
-  std::cin >> input;
-  if(input != -1) {
-    outputDevice = input;
-  }
-  outputSampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
-  std::cout << std::endl;
-  std::cout << "Default sample rate: " << outputSampleRate << std::endl;
-  std::cout << "Enter sample rate (-1 for default): ";
-  std::cin >> input;
-  if(input != -1) {
-    outputSampleRate = input;
-  }
-  std::cout << std::endl;
+    std::cout << "Default output device: " << outputDevice << std::endl;
+    std::cout << "Enter output device (-1 for default): ";
+    std::cin >> input;
+    if (input != -1) {
+      outputDevice = input;
+    }
+    outputSampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
+    std::cout << std::endl;
+    std::cout << "Default sample rate: " << outputSampleRate << std::endl;
+    std::cout << "Enter sample rate (-1 for default): ";
+    std::cin >> input;
+    if (input != -1) {
+      outputSampleRate = input;
+    }
+    std::cout << std::endl;
 
-  std::cout << "Default input device: " << inputDevice << std::endl;
-  std::cout << "Enter input device (-1 for default): ";
-  std::cin >> input;
-  if(input != -1) {
-    inputDevice = input;
+    std::cout << "Default input device: " << inputDevice << std::endl;
+    std::cout << "Enter input device (-1 for default): ";
+    std::cin >> input;
+    if (input != -1) {
+      inputDevice = input;
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
-  }
+
   // Set up output stream
   outputParameters.device = outputDevice;
   if (outputParameters.device == paNoDevice) {
@@ -72,6 +73,19 @@ void PAsound::init(bool verbose) {
   outputParameters.hostApiSpecificStreamInfo = NULL;
   double sampleRate = Pa_GetDeviceInfo(outputParameters.device)
                           ->defaultSampleRate; /* default sample rate */
+
+  // Set up input stream
+  PaStreamParameters inputParameters;
+  inputParameters.device = inputDevice;
+  if (inputParameters.device == paNoDevice) {
+    std::cout << "Error: No default input device." << std::endl;
+  }
+  inputParameters.channelCount = 1;         /* mono input */
+  inputParameters.sampleFormat = paFloat32; /* 32 bit floating point input */
+  inputParameters.suggestedLatency =
+      Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+  inputParameters.hostApiSpecificStreamInfo = NULL;
+
   // Open stream
   Pa_OpenStream(&stream, NULL, &outputParameters, sampleRate, BUFFER_SIZE,
                 paClipOff, audioCallback, this);
@@ -82,6 +96,33 @@ bool PAsound::isQueueEmpty() { return soundQueue.empty(); }
 
 std::queue<SoundObject> *PAsound::getQueue() { return &soundQueue; }
 
+void PAsound::play(std::vector<float> freqs, int ms_duration) {
+  int samples = ms_duration * outputSampleRate / 1000.;
+  SoundObject sound({freqs, samples, 0});
+  soundQueue.push(sound);
+
+  if (Pa_IsStreamStopped(stream)) {
+    std::cout << "Starting Stream" << std::endl;
+    Pa_StartStream(stream);
+  }
+}
+
+void PAsound::stop() {
+  std::cout << "Stopping Stream" << std::endl;
+  Pa_StopStream(stream);
+  while (!soundQueue.empty()) {
+    soundQueue.pop();
+  }
+}
+
+void PAsound::wait() {
+  std::cout << "Waiting for stream to finish" << std::endl;
+  bool streamActive;
+  do {
+    Pa_Sleep(5);
+    streamActive = Pa_IsStreamActive(stream);
+  } while (streamActive);
+}
 int audioCallback(const void *inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
                   const PaStreamCallbackTimeInfo *timeInfo,
@@ -95,7 +136,10 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   // Tell the main thread to stop playing when the queue is empty
   PAsound *sound = (PAsound *)userData;
   if (sound->isQueueEmpty()) {
-    return paComplete;
+    for (int i = 0; i < framesPerBuffer; i++) {
+      *out++ = 0;
+    }
+    return paContinue;
   }
 
   SoundObject &soundObject = sound->getQueue()->front();
@@ -105,7 +149,7 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
       sound->getQueue()->pop();
       if (sound->isQueueEmpty()) {
         *out++ = 0;
-        return paComplete;
+        return paContinue;
       }
       soundObject = sound->getQueue()->front();
     }
@@ -127,32 +171,4 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
 
 void StreamFinished(void *userData) {
   std::cout << "Stream Completed" << std::endl;
-}
-
-void PAsound::wait() {
-  std::cout << "Waiting for stream to finish" << std::endl;
-  bool streamActive;
-  do {
-    Pa_Sleep(5);
-    streamActive = Pa_IsStreamActive(stream);
-  } while (streamActive);
-}
-
-void PAsound::play(std::vector<float> freqs, int ms_duration) {
-  int samples = ms_duration * outputSampleRate / 1000.;
-  SoundObject sound({freqs, samples, 0});
-  soundQueue.push(sound);
-
-  if (Pa_IsStreamStopped(stream)) {
-    std::cout << "Starting Stream" << std::endl;
-    Pa_StartStream(stream);
-  }
-}
-
-void PAsound::stop() {
-  std::cout << "Stopping Stream" << std::endl;
-  Pa_StopStream(stream);
-  while (!soundQueue.empty()) {
-    soundQueue.pop();
-  }
 }

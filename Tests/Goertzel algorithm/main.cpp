@@ -84,15 +84,16 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
   }
   int row = index1;
   int col = index2 % 4;
-  ;
-  printf("The DTMF sound is: %c\n", dtmf[row][col]);
-  return 0;
+  char dtmf_char = dtmf[row][col];
+
+  printf("The DTMF sound is: %c\n", dtmf_char);
+  return dtmf_char;0
 }
 
 int main() {
   // Sample rate and size
   int sample_rate = 10000;
-  int sample_size = 64;
+  int sample_size = 50;
   float binWidth = (float)sample_rate / (float)sample_size;
   printf("Max bin width: %fHz\n", binWidth);
 
