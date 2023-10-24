@@ -124,21 +124,20 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
 void DTMFtoData(std::vector<DTMF> input) {
   // Error dectection shold happen before this function
 
-  Operation op = (Operation)input[1];
-  std::cout << "Operation: " << op << std::endl;
-  if (op <= Operation::stop) {
+  std::cout << "Operation: " << input[1] << std::endl;
+  if ((Operation)input[1] <= Operation::stop) {
     return;
   }
-
   std::vector<float> result;
-  switch ((int)op) {
+  switch ((int)input[1]) {
+
   case Operation::coordinate: {
-    int index = 3;
+    int index = 2;
     while (index < input.size()) {
       float temp = 0;
       bool isNegative = false;
       bool isDecimal = false;
-      int decimalPlace = 1;
+      int decimalPlace = 10;
       while (input[index] != DTMF::wall || input[index] != DTMF::end) {
         if (input[index] == DTMF::negative) {
           isNegative = true;
