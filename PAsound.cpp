@@ -101,7 +101,8 @@ void PAsound::play(std::vector<float> freqs, int ms_duration) {
   SoundObject sound({freqs, samples, 0});
   soundQueue.push(sound);
 
-  if (Pa_IsStreamStopped(stream)) {
+  if (!isStreamActive) {
+    isStreamActive = true;
     std::cout << "Starting Stream" << std::endl;
     Pa_StartStream(stream);
   }
@@ -109,10 +110,11 @@ void PAsound::play(std::vector<float> freqs, int ms_duration) {
 
 void PAsound::stop() {
   std::cout << "Stopping Stream" << std::endl;
-  Pa_StopStream(stream);
-  while (!soundQueue.empty()) {
-    soundQueue.pop();
+  PaError err = Pa_AbortStream(stream);
+  if (err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
   }
+  isStreamActive = false;
 }
 
 void PAsound::wait() {
@@ -120,7 +122,7 @@ void PAsound::wait() {
   bool streamActive;
   do {
     Pa_Sleep(5);
-    streamActive = Pa_IsStreamActive(stream);
+    streamActive = isStreamActive;
   } while (streamActive);
 }
 int audioCallback(const void *inputBuffer, void *outputBuffer,
@@ -136,10 +138,9 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   // Tell the main thread to stop playing when the queue is empty
   PAsound *sound = (PAsound *)userData;
   if (sound->isQueueEmpty()) {
-    for (int i = 0; i < framesPerBuffer; i++) {
-      *out++ = 0;
-    }
-    return paContinue;
+    std::cout << "Queue is empty" << std::endl;
+    sound->stop();
+    return paComplete;
   }
 
   SoundObject &soundObject = sound->getQueue()->front();

@@ -55,6 +55,7 @@ class PAsound {
   PaStreamParameters outputParameters;
   PaStream *stream;
   PaError err;
+  bool isStreamActive;
 
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;

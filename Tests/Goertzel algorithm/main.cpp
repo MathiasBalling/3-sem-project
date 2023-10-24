@@ -93,7 +93,7 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
 int main() {
   // Sample rate and size
   int sample_rate = 10000;
-  int sample_size = 50;
+  int sample_size = 1000;
   float binWidth = (float)sample_rate / (float)sample_size;
   printf("Max bin width: %fHz\n", binWidth);
 
