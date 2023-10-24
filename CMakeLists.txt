@@ -8,25 +8,26 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 include_directories(${PORTAUDIO_INCLUDE_DIRS})
 
-add_executable(Protoccol 
-Protocol/main.cpp)
 
-add_executable(output 
+add_executable(Output 
 Output/main.cpp
 Output/PAsound.cpp
 Output/PAsound.h)
+target_link_libraries(Output -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
-add_executable(input
+add_executable(Input
 Input/receiver.cpp)
+target_link_libraries(Input -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
+add_executable(Protoccol 
+Protocol/main.cpp)
+
+# Tests
 add_executable(Goertzel
 Tests/Goertzel-algorithm/main.cpp)
 
-add_executable(ToProtocol
+add_executable(DataToProtocol
 Tests/Convert-to-protocol/main.cpp)
-
-target_link_libraries(input -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
-target_link_libraries(output -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
 
 
