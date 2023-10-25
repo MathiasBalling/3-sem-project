@@ -1,5 +1,8 @@
+#include "consts.h"
 #include <array>
 #include <iostream>
+#include <string>
+#include <utility>
 #include <vector>
 
 // Coord (-1.23, -1.1)
@@ -10,34 +13,6 @@
 // Stop moving
 // * 4 #
 
-enum Operation { forward, backward, left, right, stop, coordinate, lidar };
-
-enum DTMF {
-  zero = 0, // 1
-  one,      // 2
-  two,      // 3
-  three,    // A
-  four,     // 4
-  five,     // 5
-  six,      // 6
-  seven,    // B
-  eight,    // 7
-  nine,     // 8
-  comma,    // 9 change to comma?
-  negative, // C change to negative?
-  start,    //*
-  divide,   // 0
-  end,      // #
-  wall      // D
-};
-char indexToDtmf[16] = {'1', '2', '3', 'A', '4', '5', '6', 'B',
-                        '7', '8', '9', 'C', '*', '0', '#', 'D'};
-
-static int dtmf[16][2] = {{697, 1209}, {697, 1336}, {697, 1477}, {697, 1633},
-                          {770, 1209}, {770, 1336}, {770, 1477}, {770, 1633},
-                          {852, 1209}, {852, 1336}, {852, 1477}, {852, 1633},
-                          {941, 1209}, {941, 1336}, {941, 1477}, {941, 1633}};
-
 std::array<int, 2> freqsDTMF(DTMF dt) {
   std::array<int, 2> result;
   result[0] = dtmf[dt][0];
@@ -47,20 +22,17 @@ std::array<int, 2> freqsDTMF(DTMF dt) {
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   // Send direction in DTMF
-  if (op <= Operation::stop) {
-    std::vector<DTMF> result;
-    result.push_back(DTMF::start);
-    result.push_back((DTMF)op);
+  std::vector<DTMF> result;
+  result.push_back(DTMF::start);
+  result.push_back(static_cast<DTMF>(op));
+  if (op <= Operation::STOP) {
     result.push_back(DTMF::end);
     return result;
   }
 
   // Send other operations with data in DTMF
-  std::vector<DTMF> result;
-  switch ((int)op) {
-  case Operation::coordinate: {
-    result.push_back(DTMF::start);
-    result.push_back((DTMF)op);
+  switch (static_cast<int>(op)) {
+  case Operation::COORDINATE: {
     result.push_back(DTMF::wall);
     int base = 10;
     int index = 0;
@@ -100,7 +72,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
           remainderdata /= base;
         }
         for (int i = temp.size() - 1; i >= 0; i--) {
-          result.push_back((DTMF)temp[i]);
+          result.push_back(static_cast<DTMF>(temp[i]));
           if (i != 0)
             result.push_back(DTMF::divide);
         }
@@ -110,8 +82,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
     result.push_back(DTMF::end);
     return result;
   }
-  case Operation::lidar: {
-    result.push_back(DTMF::start);
+  case Operation::LIDAR: {
 
     result.push_back(DTMF::end);
     return result;
@@ -121,59 +92,87 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   }
 }
 
-void DTMFtoData(std::vector<DTMF> input) {
-  // Error dectection shold happen before this function
-
-  std::cout << "Operation: " << input[1] << std::endl;
-  if ((Operation)input[1] <= Operation::stop) {
-    return;
-  }
+std::vector<float> DTMFdecode(const std::vector<DTMF> &input, int start,
+                              int end) {
   std::vector<float> result;
-  switch ((int)input[1]) {
-
-  case Operation::coordinate: {
-    int index = 2;
-    while (index < input.size()) {
-      float temp = 0;
-      bool isNegative = false;
-      bool isDecimal = false;
-      int decimalPlace = 10;
-      while (input[index] != DTMF::wall || input[index] != DTMF::end) {
-        if (input[index] == DTMF::negative) {
-          isNegative = true;
-        } else if (input[index] == DTMF::comma) {
-          isDecimal = true;
-        } else if (isDecimal) {
-          temp += (float)input[index] / (float)decimalPlace;
-          decimalPlace *= 10;
-        } else {
-          temp *= 10;
-          temp += input[index];
-        }
-        index++;
+  int index = start;
+  while (index < end) {
+    float temp = 0;
+    bool isNegative = false;
+    bool isDecimal = false;
+    int decimalPlace = 10;
+    // Loop through a data element
+    while ((input[index] != DTMF::wall) && (input[index] != DTMF::end)) {
+      if (input[index] == DTMF::divide) {
+        // Do nothing
+      } else if (input[index] == DTMF::negative) {
+        isNegative = true;
+      } else if (input[index] == DTMF::comma) {
+        isDecimal = true;
+      } else if (isDecimal) {
+        temp +=
+            static_cast<float>(input[index]) / static_cast<float>(decimalPlace);
+        decimalPlace *= 10;
+      } else {
+        temp *= 10;
+        temp += input[index];
       }
-      if (isNegative) {
-        temp = -temp;
-      }
-      result.push_back(temp);
       index++;
     }
-    for (auto i : result) {
-      std::cout << i << " ";
+
+    if (isNegative) {
+      temp = -temp;
     }
-    std::cout << std::endl;
-    return;
+    result.push_back(temp);
+    index++;
   }
+  return result;
+}
+
+std::pair<Operation, std::vector<float>> DTMFtoData(std::vector<DTMF> input) {
+  //! Error dectection shold happen before this function
+
+  Operation op = (Operation)input[1];
+  if (op <= Operation::STOP) {
+    // Return operation with empty vector
+    return std::make_pair(op, std::vector<float>());
   }
+  std::vector<float> result;
+  switch (static_cast<int>(input[1])) {
+  case Operation::COORDINATE: {
+    // Start from index 3 to skip start, operation and wall/end
+    int index = 3;
+    result = DTMFdecode(input, index, input.size());
+
+    return std::make_pair(op, result);
+  }
+  case Operation::LIDAR: {
+    // Start from index 3 to skip start, operation and wall/end
+    int index = 3;
+    result = DTMFdecode(input, index, input.size());
+
+    return std::make_pair(op, result);
+  }
+  default:
+    return std::make_pair(op, result);
+  }
+  return std::make_pair(op, result);
 }
 
 int main() {
-  std::vector<float> data = {11.11};
-  std::vector<DTMF> result = dataToDTMF(Operation::coordinate, data);
-  for (auto i : result) {
-    std::cout << indexToDtmf[i] << " ";
+  std::vector<float> data = {-11.11, 22.22};
+  std::vector<DTMF> output = dataToDTMF(Operation::COORDINATE, data);
+  for (auto out : output) {
+    std::cout << indexToDtmf[out] << " ";
   };
   std::cout << std::endl;
-  DTMFtoData(result);
+
+  std::pair<Operation, std::vector<float>> input = DTMFtoData(output);
+  std::cout << indexToOperation[input.first] << " ";
+  std::cout << "Data: ";
+  for (auto in : input.second) {
+    std::cout << in << " ";
+  }
+  std::cout << std::endl;
   return 0;
 }

@@ -19,8 +19,9 @@ add_executable(Input
 Input/receiver.cpp)
 target_link_libraries(Input -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
-add_executable(Protoccol 
-Protocol/main.cpp)
+add_executable(Protocol 
+Protocol/main.cpp
+Protocol/consts.h)
 
 # Tests
 add_executable(Goertzel
