@@ -32,8 +32,8 @@
 *.app
 
 // C-make
-PAsound
 .cache/
 .DS_Store
 build/
-
+compile_commands.json
+Release/

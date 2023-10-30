@@ -1,14 +1,25 @@
 #include <cmath>
+#include <ctime>
 #include <iostream>
 #include <portaudio.h>
 #include <vector>
 
 // To stop terminal from running program press Enter
 const int SAMPLE_RATE = 10000;
-const int FRAME_SIZE = 1000;
+const int FRAME_SIZE = 100;
+
+class Person{
+  public:
+    Person(std::string name, int age){
+      this->name = name;
+      this->age = age;
+    }
+    std::string name;
+    int age;
+};
 
 int dtmf_freqs[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633};
-float dtmf_mag[9];
+
 char dtmf[4][4] = {{'1', '2', '3', 'A'},
                    {'4', '5', '6', 'B'},
                    {'7', '8', '9', 'C'},
@@ -37,42 +48,29 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
 }
 char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
   // DTMF frequencies
+  float dtmf_mag[8];
   for (int i = 0; i < 8; i++) {
     dtmf_mag[i] = goertzel_mag(numSamples, dtmf_freqs[i], SAMPLING_RATE, data);
   }
 
   // Find the two largest magnitudes
-  dtmf_mag[8] = 0;
-  int index1 = 8;
-  int index2 = 8;
-  for (int i = 0; i < 8; i++) {
-    if (dtmf_mag[i] > dtmf_mag[index1]) {
-      index2 = index1;
-      index1 = i;
-    } else if (dtmf_mag[i] > dtmf_mag[index2]) {
-      index2 = i;
+  int index_low_freqs = 0;
+  int index_high_freqs = 4;
+  for (int i = 1; i < 4; i++) {
+    if (dtmf_mag[i] > dtmf_mag[index_low_freqs]) {
+      index_low_freqs = i;
+    }
+    if (dtmf_mag[i + 4] > dtmf_mag[index_high_freqs]) {
+      index_high_freqs = i + 4;
     }
   }
 
   // Find the corresponding key
-  if (index1 > index2) {
-    int temp = index1;
-    index1 = index2;
-    index2 = temp;
+  char dtmf_char = dtmf[index_low_freqs][index_high_freqs - 4];
+  float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
+  if (mean > 10) {
+    std::cout << dtmf_char << std::endl;
   }
-  int row = index1;
-  int col = index2 % 4;
-  float mean = (dtmf_mag[index1] + dtmf_mag[index1]) / 2;
-  char dtmf_char = dtmf[row][col];
-  std::vector<char> byte;
-  byte.push_back(dtmf_char);
-  for (int k = 0; k < 1; k++) {
-    if (mean > 10000) {
-      std::cout << byte[k] << " " << mean << std::endl;
-    }
-  }
-
-  byte.clear();
   return 0;
 }
 
@@ -81,12 +79,13 @@ static int audioCallback(const void *inputBuffer, void *outputBuffer,
                          const PaStreamCallbackTimeInfo *timeInfo,
                          PaStreamCallbackFlags statusFlags, void *userData) {
   float *inputData = (float *)inputBuffer;
-  findDTMF(FRAME_SIZE, SAMPLE_RATE, inputData);
 
+  findDTMF(FRAME_SIZE, SAMPLE_RATE, inputData);
   return paContinue;
 }
 
 int main() {
+    Person p("John", 21);
   PaError err;
   PaStream *stream;
 

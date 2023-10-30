@@ -5,14 +5,6 @@
 #include <utility>
 #include <vector>
 
-// Coord (-1.23, -1.1)
-// * 5 D C 2 9 3 0 A D C 2 9 2 #
-// st  | -   ,       | -   ,   end
-// Direction (left)
-// * 2 #
-// Stop moving
-// * 4 #
-
 std::array<int, 2> freqsDTMF(DTMF dt) {
   std::array<int, 2> result;
   result[0] = dtmf[dt][0];
@@ -91,7 +83,6 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
     return result;
   }
 }
-
 std::vector<float> DTMFdecode(const std::vector<DTMF> &input, int start,
                               int end) {
   std::vector<float> result;

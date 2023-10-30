@@ -1,11 +1,18 @@
-#include <chrono>
 #include <cstdio>
-#include <fstream>
 #include <math.h>
 #include <string>
+#include <sys/_types/_clock_t.h>
 
 // Explanation of the Goertzel algorithm:
 // https://www.embedded.com/the-goertzel-algorithm/
+
+// Find the corresponding key
+const char dtmf[4][4] = {{'1', '2', '3', 'A'},
+                         {'4', '5', '6', 'B'},
+                         {'7', '8', '9', 'C'},
+                         {'*', '0', '#', 'D'}};
+
+const int dtmf_freqs[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633};
 
 float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
                    float *data) {
@@ -25,13 +32,6 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
     q1 = q0;
   }
 
-  // With phase information
-  // Calculate the real and imaginary results with the final coefficients
-  // float real = (q1-q2*cosine);
-  // float imag = (q2 * sine);
-  // Calculate the overall magnitude^2 for the target frequency
-  // float magnitude = real * real + imag * imag;
-
   // Without phase information
   // Calculate the overall magnitude^2 for the target frequency
   float magnitude = q1 * q1 + q2 * q2 - q1 * q2 * coeff;
@@ -41,64 +41,42 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
 
 char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
   // DTMF frequencies
-  int dtmf_freqs[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633};
-  float dtmf_mag[9];
+  float dtmf_mag[8];
 
   // Use chrono to time the goertzel_mag function
-  auto start = std::chrono::high_resolution_clock::now();
   for (int i = 0; i < 8; i++) {
     dtmf_mag[i] = goertzel_mag(numSamples, dtmf_freqs[i], SAMPLING_RATE, data);
   }
-  auto end = std::chrono::high_resolution_clock::now();
-  auto elapsed =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
-  printf("Goertzel algorithm time: %dns\n", (int)elapsed.count());
 
   // Find the two largest magnitudes
-  printf("The magnitudes of the frequencies are: \n");
-  dtmf_mag[8] = 0;
-  int index1 = 8;
-  int index2 = 8;
-  for (int i = 0; i < 8; i++) {
-    printf("\tFrequency: %dHz\tMagnitude: %f\n", dtmf_freqs[i], dtmf_mag[i]);
-    if (dtmf_mag[i] > dtmf_mag[index1]) {
-      index2 = index1;
-      index1 = i;
-    } else if (dtmf_mag[i] > dtmf_mag[index2]) {
-      index2 = i;
+  int index_low_freqs = 0;
+  int index_high_freqs = 4;
+  for (int i = 1; i < 4; i++) {
+    if (dtmf_mag[i] > dtmf_mag[index_low_freqs]) {
+      index_low_freqs = i;
+    }
+    if (dtmf_mag[i + 4] > dtmf_mag[index_high_freqs]) {
+      index_high_freqs = i + 4;
     }
   }
 
   printf("The two dominant frequencies are: \n\t%dHz\n\t%dHz\n",
-         dtmf_freqs[index1], dtmf_freqs[index2]);
+         dtmf_freqs[index_low_freqs], dtmf_freqs[index_high_freqs]);
 
-  // Find the corresponding key
-  char dtmf[4][4] = {{'1', '2', '3', 'A'},
-                     {'4', '5', '6', 'B'},
-                     {'7', '8', '9', 'C'},
-                     {'*', '0', '#', 'D'}};
-  if (index1 > index2) {
-    int temp = index1;
-    index1 = index2;
-    index2 = temp;
+  char dtmf_char = dtmf[index_low_freqs][index_high_freqs - 4];
+  float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
+  if (mean > 10) {
+    return dtmf_char;
   }
-  int row = index1;
-  int col = index2 % 4;
-  char dtmf_char = dtmf[row][col];
-
-  printf("The DTMF sound is: %c\n", dtmf_char);
-  return dtmf_char;
+  return -1;
 }
 
 int main() {
   // Sample rate and size
   int sample_rate = 10000;
-  int sample_size = 1000;
+  int sample_size = 100;
   float binWidth = (float)sample_rate / (float)sample_size;
   printf("Max bin width: %fHz\n", binWidth);
-
-  // DTMF frequencies
-  int dtmf_freqs[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633};
 
   // Generate a test signal with two DTMF frequencies
   float data[sample_size];
@@ -108,7 +86,11 @@ int main() {
   }
 
   // Find the two dominant frequencies
-  findDTMF(sample_size, sample_rate, data);
-
+  clock_t start = clock();
+  char dtmfchar = findDTMF(sample_size, sample_rate, data);
+  clock_t end = clock();
+  double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+  printf("The corresponding key is: %c\n", dtmfchar);
+  printf("Time taken: %fs\n", time_taken);
   return 0;
 }

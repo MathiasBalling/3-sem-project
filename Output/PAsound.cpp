@@ -1,5 +1,6 @@
 #include "PAsound.h"
 #include "portaudio.h"
+#include <cmath>
 
 PAsound::PAsound() {
   // PortAudio Initialization
@@ -34,7 +35,7 @@ void PAsound::findDevices() {
 
 void PAsound::init(bool verbose) {
   if (verbose) {
-    findDevices();
+    this->findDevices();
     int input;
     std::cout << "Default output device: " << outputDevice << std::endl;
     std::cout << "Enter output device (-1 for default): ";
@@ -63,6 +64,7 @@ void PAsound::init(bool verbose) {
 
   // Set up output stream
   outputParameters.device = outputDevice;
+
   if (outputParameters.device == paNoDevice) {
     std::cout << "Error: No default output device." << std::endl;
   }
@@ -88,7 +90,7 @@ void PAsound::init(bool verbose) {
 
   // Open stream
   Pa_OpenStream(&stream, NULL, &outputParameters, sampleRate, BUFFER_SIZE,
-                paClipOff, audioCallback, this);
+paClipOff, audioCallback, this);
   Pa_SetStreamFinishedCallback(stream, &StreamFinished);
 }
 
