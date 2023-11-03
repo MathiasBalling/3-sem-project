@@ -3,6 +3,8 @@ project(3semester)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(PkgConfig REQUIRED)
 #Find portaudio
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
@@ -12,8 +14,18 @@ include_directories(${PORTAUDIO_INCLUDE_DIRS})
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+#Main implementations
+add_executable(Audiotest
+Audio/main.cpp
+# Audio/audio.cpp
+# Audio/audio.h
+Audio/goertzel.cpp
+Audio/protocol.cpp
+Audio/consts.h)
+target_link_libraries(Audiotest -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
+
 #To make dtmf sounds
-add_executable(Output 
+add_executable(Output
 Output/main.cpp
 Output/PAsound.cpp
 Output/PAsound.h)
@@ -25,7 +37,7 @@ Input/receiver.cpp)
 target_link_libraries(Input -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
 #To convert dtmf sounds to data and vice versa
-add_executable(Protocol 
+add_executable(Protocol
 Protocol/main.cpp
 Protocol/consts.h)
 
@@ -39,6 +51,6 @@ add_executable(DataToProtocol
 Tests/Convert-to-protocol/main.cpp)
 
 #To make visualisation of dtmf sounds
-add_executable(Visual 
+add_executable(Visual
 Tests/Visual/visual.cpp)
 target_link_libraries(Visual ${OpenCV_LIBS})

@@ -8,16 +8,6 @@
 const int SAMPLE_RATE = 10000;
 const int FRAME_SIZE = 100;
 
-class Person{
-  public:
-    Person(std::string name, int age){
-      this->name = name;
-      this->age = age;
-    }
-    std::string name;
-    int age;
-};
-
 int dtmf_freqs[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633};
 
 char dtmf[4][4] = {{'1', '2', '3', 'A'},
@@ -85,7 +75,6 @@ static int audioCallback(const void *inputBuffer, void *outputBuffer,
 }
 
 int main() {
-    Person p("John", 21);
   PaError err;
   PaStream *stream;
 

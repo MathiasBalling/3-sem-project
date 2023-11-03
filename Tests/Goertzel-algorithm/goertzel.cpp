@@ -21,7 +21,6 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
                        (float)SAMPLING_RATE));
   float omega = (2.0 * M_PI * k) / (float)numSamples;
   float cosine = cos(omega);
-  // float sine = sin(omega);
   float coeff = 2.0 * cosine;
   float q0 = 0, q1 = 0, q2 = 0;
 
