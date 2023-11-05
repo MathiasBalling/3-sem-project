@@ -3,8 +3,6 @@ project(3semester)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 find_package(PkgConfig REQUIRED)
 #Find portaudio
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
