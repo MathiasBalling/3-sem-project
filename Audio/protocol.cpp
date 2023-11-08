@@ -1,8 +1,4 @@
-#include "consts.h"
-#include <array>
-#include <iostream>
-#include <string>
-#include <vector>
+#include "protocol.h"
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   // Send direction in DTMF
@@ -14,7 +10,6 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
     result.push_back(DTMF::end);
     return result;
   }
-
   // Send other operations with data in DTMF
   switch (static_cast<int>(op)) {
   case Operation::COORDINATE: {

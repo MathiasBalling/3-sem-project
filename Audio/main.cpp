@@ -1,15 +1,16 @@
-#include "consts.h"
-
-std::array<int, 2> DTMFtoFreq(DTMF dt) {
-  std::array<int, 2> result;
-  result[0] = dtmf_freqs[dt % 4];
-  result[1] = dtmf_freqs[dt / 4 + 4];
-  return result;
-};
+#include "PAsound.h"
+#include "protocol.h"
+#include <iostream>
 
 int main() {
-  std::array<int, 2> result;
-  result = DTMFtoFreq(DTMF::start);
-  printf("%d %d\n", result[0], result[1]);
+  PAsound sound;
+  sound.init(0);
+  sound.play({697, 1209}, 1000);
+  std::cin.get();
+  sound.play({697, 1336}, 1000);
+  std::cin.get();
+  sound.setListening(1);
+
+  std::cin.get();
   return 0;
 }

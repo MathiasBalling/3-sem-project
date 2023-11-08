@@ -1,5 +1,7 @@
+#include "goertzel.h"
 #include "consts.h"
 #include <cmath>
+#include <iostream>
 
 float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
                    float *data) {
@@ -21,7 +23,8 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
 
   return magnitude;
 }
-char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
+
+char findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
   // DTMF frequencies
   float dtmf_mag[8];
   for (int i = 0; i < 8; i++) {
@@ -41,10 +44,9 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float *data) {
   }
 
   // Find the corresponding key
-  char dtmf_char = indexToDtmf[index_low_freqs % 4 + index_high_freqs / 4 * 4];
   float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
-  if (mean > 10) {
-    return dtmf_char;
-  }
+  printf("%f\n", mean);
+  if (mean > 10)
+    return indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4];
   return -1;
 }

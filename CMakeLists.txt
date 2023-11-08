@@ -15,9 +15,10 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 #Main implementations
 add_executable(Audiotest
 Audio/main.cpp
-# Audio/audio.cpp
-# Audio/audio.h
+Audio/PAsound.cpp
+Audio/PAsound.h
 Audio/goertzel.cpp
+Audio/goertzel.h
 Audio/protocol.cpp
 Audio/consts.h)
 target_link_libraries(Audiotest -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
