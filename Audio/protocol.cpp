@@ -1,5 +1,12 @@
 #include "protocol.h"
 
+std::array<float, 2> DTMFtoFreq(DTMF dt) {
+  std::array<float, 2> result;
+  result[0] = dtmf_freqs[dt % 4];
+  result[1] = dtmf_freqs[dt / 4 + 4];
+  return result;
+};
+
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   // Send direction in DTMF
   std::vector<DTMF> result;

@@ -1,15 +1,9 @@
 #include "PAsound.h"
 #include "consts.h"
 #include "goertzel.h"
+#include "protocol.h"
 #include <cmath>
 #include <iostream>
-
-std::array<int, 2> DTMFtoFreq(DTMF dt) {
-  std::array<int, 2> result;
-  result[0] = dtmf_freqs[dt % 4];
-  result[1] = dtmf_freqs[dt / 4 + 4];
-  return result;
-};
 
 PAsound::PAsound() {
   // PortAudio Initialization
@@ -17,7 +11,6 @@ PAsound::PAsound() {
   std::cout << "PortAudio initialized" << std::endl;
   outputDevice = Pa_GetDefaultOutputDevice();
   inputDevice = Pa_GetDefaultInputDevice();
-  /* SampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate; */
 }
 
 PAsound::~PAsound() {
@@ -28,6 +21,12 @@ PAsound::~PAsound() {
 void PAsound::setListening(bool listen) { listening = listen; }
 
 bool PAsound::isListening() { return listening; }
+
+int PAsound::getSampleRate() { return SampleRate; }
+
+float PAsound::getDTime() { return dTime; }
+
+void PAsound::insertInputBuffer(char input) { inputBuffer.push_back(input); }
 
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
@@ -63,6 +62,8 @@ void PAsound::init(bool verbose) {
     std::cin >> input;
     if (input != -1) {
       SampleRate = input;
+    } else {
+      SampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
     }
     std::cout << std::endl;
 
@@ -101,21 +102,20 @@ void PAsound::init(bool verbose) {
   // Open stream
   Pa_OpenStream(&stream, &inputParameters, &outputParameters, SampleRate,
                 BUFFER_SIZE, paClipOff, audioCallback, this);
+  Pa_StartStream(stream);
 }
 
 bool PAsound::isQueueEmpty() { return soundQueue.empty(); }
 
 std::queue<SoundObject> *PAsound::getQueue() { return &soundQueue; }
 
-void PAsound::play(std::vector<float> freqs, int ms_duration) {
-  int samples = ms_duration * SampleRate / 1000.;
-  SoundObject sound({freqs, samples, 0});
-  soundQueue.push(sound);
-
-  if (!isStreamActive) {
-    isStreamActive = true;
-    std::cout << "Starting Stream" << std::endl;
-    Pa_StartStream(stream);
+void PAsound::play(Operation op, std::vector<float> data) {
+  int samples = duration * SampleRate / 1000.;
+  std::vector<DTMF> send = dataToDTMF(op, data);
+  for (auto dtmf : send) {
+    std::array<float, 2> freqs = DTMFtoFreq(dtmf);
+    SoundObject sound({freqs, samples, 0});
+    soundQueue.push(sound);
   }
 }
 
@@ -138,11 +138,21 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   (void)statusFlags;
   PAsound *sound = (PAsound *)userData;
   if (sound->isListening()) {
-    char dtmf = findDTMF(framesPerBuffer, SampleRate, (float *)inputBuffer);
-    if (dtmf != -1)
-      printf("%c\n", dtmf);
-    for (int i = 0; i < framesPerBuffer; i++)
-      *out++ = 0;
+    char dtmf =
+        findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+    switch (dtmf) {
+    case -1:
+      /* for (int i = 0; i < framesPerBuffer; i++) */
+      /*   *out++ = 0; */
+      break;
+    case '#':
+      sound->insertInputBuffer(dtmf);
+      sound->setListening(false);
+      break;
+    default:
+      sound->insertInputBuffer(dtmf);
+      break;
+    }
     return paContinue;
   }
 
@@ -171,7 +181,7 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
                         soundObject.freqs.size());
     }
     *out++ = sample;
-    soundObject.time += dTime;
+    soundObject.time += sound->getDTime();
     soundObject.samplesLeft--;
   }
 

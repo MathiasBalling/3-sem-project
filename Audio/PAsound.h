@@ -1,13 +1,14 @@
 #pragma once
 #include "consts.h"
 #include "portaudio.h"
+#include <deque>
 #include <queue>
 
-std::array<int, 2> DTMFtoFreq(DTMF dt);
+std::array<float, 2> DTMFtoFreq(DTMF dt);
 
 // Sound object
 struct SoundObject {
-  std::vector<float> freqs;
+  std::array<float, 2> freqs;
   int samplesLeft;
   float time;
 };
@@ -29,6 +30,9 @@ class PAsound {
   bool isStreamActive = false;
   bool listening = false;
 
+  int SampleRate = 20000;
+  float dTime = 1. / SampleRate;
+  int duration = 500;
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
 
@@ -36,17 +40,22 @@ class PAsound {
   int outputDevice;
   int inputDevice;
 
+  // For input
+  std::deque<char> inputBuffer;
+  char lastChar;
+
 public:
   PAsound();
   ~PAsound();
   void init(bool verbose = false);
   void findDevices();
-  void setOutputDevice(int outDevice);
-  void setInputDevice(int inDevice);
-  void play(std::vector<float> freqs, int duration);
+  void play(Operation op, std::vector<float> data);
   void stop();
   bool isQueueEmpty();
   std::queue<SoundObject> *getQueue();
   bool isListening();
   void setListening(bool listen);
+  int getSampleRate();
+  float getDTime();
+  void insertInputBuffer(char input);
 };

@@ -45,7 +45,6 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
 
   // Find the corresponding key
   float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
-  printf("%f\n", mean);
   if (mean > 10)
     return indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4];
   return -1;
