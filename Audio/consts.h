@@ -4,7 +4,16 @@
 // Constants
 #define BUFFER_SIZE (500)
 
-enum Operation { FORWARD, BACKWARD, LEFT, RIGHT, STOP, COORDINATE, LIDAR };
+enum Operation {
+  ERROR,
+  FORWARD,
+  BACKWARD,
+  LEFT,
+  RIGHT,
+  STOP,
+  COORDINATE,
+  LIDAR
+};
 
 enum DTMF {
   zero = 0, // 1
@@ -25,8 +34,9 @@ enum DTMF {
   wall      // D
 };
 
-const std::string indexToOperation[7] = {
-    "Forward", "Backward", "Left", "Right", "Stop", "Coordinate", "lidar"};
+const std::string indexToOperation[8] = {"Error",      "Forward", "Backward",
+                                         "Left",       "Right",   "Stop",
+                                         "Coordinate", "lidar"};
 
 const char indexToDtmf[16] = {'1', '2', '3', 'A', '4', '5', '6', 'B',
                               '7', '8', '9', 'C', '*', '0', '#', 'D'};
