@@ -6,11 +6,13 @@
 
 enum Operation {
   ERROR,
+  ACKNOWLEDGE,
   FORWARD,
   BACKWARD,
   LEFT,
   RIGHT,
   STOP,
+  MOVEMENT,
   COORDINATE,
   LIDAR
 };

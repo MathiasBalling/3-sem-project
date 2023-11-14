@@ -8,12 +8,10 @@ int main() {
   std::vector<float> data = {1.2, 3.4};
   PAsound sound;
   sound.init(0);
-  sound.play(op, data);
-  std::cin.get();
-  sound.setListening(true);
-  while (sound.isListening()) {
-    std::cout << "Listening" << std::endl;
+  while (1) {
+    sound.play(op, data);
     std::cin.get();
   }
+  /* sound.processInput(); */
   return 0;
 }

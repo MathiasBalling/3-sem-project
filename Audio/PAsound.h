@@ -22,28 +22,6 @@ static int audioCallback(const void *inputBuffer, void *outputBuffer,
 
 // PAsound class
 class PAsound {
-  // PortAudio variables
-  PaStreamParameters outputParameters;
-  PaStreamParameters inputParameters;
-  PaStream *stream;
-  PaError err;
-  bool isStreamActive = false;
-  bool listening = false;
-
-  int SampleRate = 20000;
-  float dTime = 1. / SampleRate;
-  int duration = 500;
-  // Queue for sound objects
-  std::queue<SoundObject> soundQueue;
-
-  // Device variables
-  int outputDevice;
-  int inputDevice;
-
-  // For input
-  std::deque<char> inputBuffer;
-  char lastChar = ' ';
-
 public:
   PAsound();
   ~PAsound();
@@ -59,4 +37,28 @@ public:
   float getDTime();
   void insertInputBuffer(char input);
   char getLastChar();
+  /* std::pair() processInput(); */
+
+private:
+  // PortAudio variables
+  PaStreamParameters outputParameters;
+  PaStreamParameters inputParameters;
+  PaStream *stream;
+  PaError err;
+  bool isStreamActive = false;
+  bool listening = false;
+
+  int SampleRate = 44800;
+  float dTime = 1. / SampleRate;
+  int duration = 50;
+  // Queue for sound objects
+  std::queue<SoundObject> soundQueue;
+
+  // Device variables
+  int outputDevice;
+  int inputDevice;
+
+  // For input
+  std::deque<char> inputBuffer;
+  char lastChar = -1;
 };

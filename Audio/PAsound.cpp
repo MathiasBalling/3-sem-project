@@ -100,9 +100,15 @@ void PAsound::init(bool verbose) {
       Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
   inputParameters.hostApiSpecificStreamInfo = NULL;
   // Open stream
-  Pa_OpenStream(&stream, &inputParameters, &outputParameters, SampleRate,
-                BUFFER_SIZE, paClipOff, audioCallback, this);
-  Pa_StartStream(stream);
+  err = Pa_OpenStream(&stream, &inputParameters, &outputParameters, SampleRate,
+                      BUFFER_SIZE, paClipOff, audioCallback, this);
+  if (err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
+  }
+  err = Pa_StartStream(stream);
+  if (err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
+  }
 }
 
 bool PAsound::isQueueEmpty() { return soundQueue.empty(); }
@@ -113,7 +119,9 @@ void PAsound::play(Operation op, std::vector<float> data) {
   int samples = duration * SampleRate / 1000.;
   std::vector<DTMF> send = dataToDTMF(op, data);
   for (auto dtmf : send) {
+    std::cout << "Playing: " << dtmf << std::endl;
     std::array<float, 2> freqs = DTMFtoFreq(dtmf);
+    std::cout << "Freqs: " << freqs[0] << ", " << freqs[1] << std::endl;
     SoundObject sound({freqs, samples, 0});
     soundQueue.push(sound);
   }
@@ -154,7 +162,7 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
     }
     return paContinue;
   }
-  // Tell the main thread to stop playing when the queue is empty
+  // Fill the buffer with silence if the queue is empty
   if (sound->isQueueEmpty()) {
     for (int i = 0; i < framesPerBuffer; i++)
       *out++ = 0;
@@ -177,6 +185,9 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
       sample += (float)(sin(freq * soundObject.time * 2 * M_PI) * 1. /
                         soundObject.freqs.size());
     }
+    // Fade out the sound when it is about to end
+    if (soundObject.samplesLeft < 100)
+      sample *= soundObject.samplesLeft / 100.;
     *out++ = sample;
     soundObject.time += sound->getDTime();
     soundObject.samplesLeft--;
