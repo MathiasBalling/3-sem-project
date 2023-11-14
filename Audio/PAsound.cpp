@@ -26,7 +26,12 @@ int PAsound::getSampleRate() { return SampleRate; }
 
 float PAsound::getDTime() { return dTime; }
 
-void PAsound::insertInputBuffer(char input) { inputBuffer.push_back(input); }
+void PAsound::insertInputBuffer(char input) {
+  inputBuffer.push_back(input);
+  lastChar = input;
+}
+
+char PAsound::getLastChar() { return lastChar; }
 
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
@@ -66,7 +71,6 @@ void PAsound::init(bool verbose) {
       SampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
     }
     std::cout << std::endl;
-
     std::cout << "Default input device: " << inputDevice << std::endl;
     std::cout << "Enter input device (-1 for default): ";
     std::cin >> input;
@@ -75,10 +79,8 @@ void PAsound::init(bool verbose) {
     }
     std::cout << std::endl;
   }
-
   // Set up output stream
   outputParameters.device = outputDevice;
-
   if (outputParameters.device == paNoDevice) {
     std::cout << "Error: No default output device." << std::endl;
   }
@@ -87,7 +89,6 @@ void PAsound::init(bool verbose) {
   outputParameters.suggestedLatency =
       Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
   outputParameters.hostApiSpecificStreamInfo = NULL;
-
   // Set up input stream
   inputParameters.device = inputDevice;
   if (inputParameters.device == paNoDevice) {
@@ -98,7 +99,6 @@ void PAsound::init(bool verbose) {
   inputParameters.suggestedLatency =
       Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
   inputParameters.hostApiSpecificStreamInfo = NULL;
-
   // Open stream
   Pa_OpenStream(&stream, &inputParameters, &outputParameters, SampleRate,
                 BUFFER_SIZE, paClipOff, audioCallback, this);
@@ -142,29 +142,27 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
         findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
     switch (dtmf) {
     case -1:
-      /* for (int i = 0; i < framesPerBuffer; i++) */
-      /*   *out++ = 0; */
       break;
     case '#':
       sound->insertInputBuffer(dtmf);
       sound->setListening(false);
       break;
     default:
-      sound->insertInputBuffer(dtmf);
+      if (sound->getLastChar() != dtmf)
+        sound->insertInputBuffer(dtmf);
       break;
     }
     return paContinue;
   }
-
   // Tell the main thread to stop playing when the queue is empty
   if (sound->isQueueEmpty()) {
     for (int i = 0; i < framesPerBuffer; i++)
       *out++ = 0;
     return paContinue;
   }
-
   SoundObject &soundObject = sound->getQueue()->front();
   unsigned long i;
+  // FIX: Match the amplitude of the concurrent sounds
   for (i = 0; i < framesPerBuffer; i++) {
     if (soundObject.samplesLeft == 0) {
       sound->getQueue()->pop();
@@ -172,7 +170,6 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
         *out++ = 0;
         return paContinue;
       }
-
       soundObject = sound->getQueue()->front();
     }
     float sample = 0;
@@ -184,6 +181,5 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
     soundObject.time += sound->getDTime();
     soundObject.samplesLeft--;
   }
-
   return paContinue;
 }

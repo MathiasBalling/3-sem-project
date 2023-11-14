@@ -11,5 +11,9 @@ int main() {
   sound.play(op, data);
   std::cin.get();
   sound.setListening(true);
+  while (sound.isListening()) {
+    std::cout << "Listening" << std::endl;
+    std::cin.get();
+  }
   return 0;
 }

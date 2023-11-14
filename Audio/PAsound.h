@@ -42,7 +42,7 @@ class PAsound {
 
   // For input
   std::deque<char> inputBuffer;
-  char lastChar;
+  char lastChar = ' ';
 
 public:
   PAsound();
@@ -58,4 +58,5 @@ public:
   int getSampleRate();
   float getDTime();
   void insertInputBuffer(char input);
+  char getLastChar();
 };
