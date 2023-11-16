@@ -6,13 +6,6 @@
 
 std::array<float, 2> DTMFtoFreq(DTMF dt);
 
-// Sound object
-struct SoundObject {
-  std::array<float, 2> freqs;
-  int samplesLeft;
-  float time;
-};
-
 // Callbacks
 static void StreamFinished(void *userData);
 static int audioCallback(const void *inputBuffer, void *outputBuffer,
@@ -36,9 +29,8 @@ public:
   int getSampleRate();
   float getDTime();
   void insertInputBuffer(DTMF input);
-  std::deque<DTMF> getInputBuffer();
   DTMF getLastDTMF();
-  /* std::pair() processInput(); */
+  std::pair<Operation, std::vector<float>> processInput();
 
 private:
   // PortAudio variables
@@ -49,9 +41,10 @@ private:
   bool isStreamActive = false;
   bool listening = false;
 
-  int SampleRate = 48000;
+  int SampleRate = SAMPLE_RATE;
   float dTime = 1. / SampleRate;
-  int duration = 50;
+  int duration = DURATION;
+  int samples = duration * SampleRate / 1000.;
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
 

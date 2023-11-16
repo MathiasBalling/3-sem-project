@@ -116,12 +116,9 @@ bool PAsound::isQueueEmpty() { return soundQueue.empty(); }
 std::queue<SoundObject> *PAsound::getQueue() { return &soundQueue; }
 
 void PAsound::play(Operation op, std::vector<float> data) {
-  int samples = duration * SampleRate / 1000.;
   std::vector<DTMF> send = dataToDTMF(op, data);
   for (auto dtmf : send) {
-    std::cout << "Playing: " << dtmf << std::endl;
     std::array<float, 2> freqs = DTMFtoFreq(dtmf);
-    std::cout << "Freqs: " << freqs[0] << ", " << freqs[1] << std::endl;
     SoundObject sound({freqs, samples, 0});
     soundQueue.push(sound);
   }
@@ -136,7 +133,11 @@ void PAsound::stop() {
   isStreamActive = false;
 }
 
-std::deque<DTMF> PAsound::getInputBuffer(){ return inputBuffer; }
+std::pair<Operation, std::vector<float>> PAsound::processInput() {
+  std::pair<Operation, std::vector<float>> res = DTMFtoData(inputBuffer);
+  inputBuffer.clear();
+  return res;
+}
 
 int audioCallback(const void *inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
@@ -150,13 +151,13 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   if (sound->isListening()) {
     DTMF dtmf =
         findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
-    
+
     switch (dtmf) {
     case DTMF::error:
       break;
     case DTMF::end:
       sound->insertInputBuffer(dtmf);
-      sound->setListening(false);
+      /* sound->setListening(false); */
       break;
     default:
       if (sound->getLastDTMF() != dtmf)

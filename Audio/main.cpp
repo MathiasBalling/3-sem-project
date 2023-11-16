@@ -3,15 +3,71 @@
 #include "protocol.h"
 #include <iostream>
 
-int main2() {
+int main() {
   Operation op = Operation::COORDINATE;
   std::vector<float> data = {1.2, 3.4};
   PAsound sound;
   sound.init(0);
-  while (1) {
+
+  char c;
+  bool quit = false;
+  while (!quit) {
+    system("clear");
+    std::cout << "Press:"
+              << "\n"
+              << "'q' quit!"
+              << "\n"
+              << "'a' move left!"
+              << "\n"
+              << "'d' move right!"
+              << "\n"
+              << "'w' move forward!"
+              << "\n"
+              << "'s' move backward!"
+              << "\n"
+              << "'x' stop!"
+              << "\n"
+              << "'m' linear and angular velocity!"
+              << "\n"
+              << "'c' to move to coordinate!"
+              << "\n";
+    std::cin >> c;
+    switch (c) {
+    case 'a':
+      op = Operation::LEFT;
+      break;
+    case 'd':
+      op = Operation::RIGHT;
+      break;
+    case 'w':
+      op = Operation::FORWARD;
+      break;
+    case 's':
+      op = Operation::BACKWARD;
+      break;
+    case 'x':
+      op = Operation::STOP;
+      break;
+    case 'c':
+      op = Operation::COORDINATE;
+      std::cout << "Enter x and y coordinate: ";
+      std::cin >> data[0];
+      std::cin >> data[1];
+      break;
+    case 'm':
+      op = Operation::MOVEMENT;
+      std::cout << "Enter linear and angular velocity: ";
+      std::cin >> data[0] >> data[1];
+      break;
+    case 'q':
+      quit = true;
+      continue;
+    default:
+      std::cout << "Invalid input!" << std::endl;
+      continue;
+    };
+    /* sound.processInput(); */
     sound.play(op, data);
-    std::cin.get();
   }
-  /* sound.processInput(); */
   return 0;
 }

@@ -21,7 +21,8 @@ Audio/goertzel.cpp
 Audio/goertzel.h
 Audio/protocol.cpp
 Audio/consts.h)
-target_link_libraries(Audiotest -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
+target_link_libraries(Audiotest
+-L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
 # Tests--------------------------------------------------------------
 #To make visualisation of dtmf sounds
