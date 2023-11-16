@@ -6,27 +6,27 @@
 #define SAMPLE_RATE (48000)
 #define DURATION (200)
 
-enum DTMF {
-  zero = 0, // 1
-  one,      // 2
-  two,      // 3
-  three,    // A
-  four,     // 4
-  five,     // 5
-  six,      // 6
-  seven,    // B
-  eight,    // 7
-  nine,     // 8
-  comma,    // 9
-  negative, // C
-  start,    // *
-  divide,   // 0
-  end,      // #
-  wall,     // D
-  error     // If no DTMF is detected
+enum class DTMF {
+  ZERO = 0, // 1
+  ONE,      // 2
+  TWO,      // 3
+  THREE,    // A
+  FOUR,     // 4
+  FIVE,     // 5
+  SIX,      // 6
+  SEVEN,    // B
+  EIGHT,    // 7
+  NINE,
+  A,      // 9
+  B,      // C
+  C,      // *
+  D,      // 0
+  WALL,   // #
+  DIVIDE, // D
+  ERROR   // If no DTMF is detected
 };
 
-enum Operation {
+enum class Operation {
   ERROR,
   ACKNOWLEDGE,
   FORWARD,

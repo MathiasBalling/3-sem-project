@@ -33,6 +33,13 @@ void PAsound::insertInputBuffer(DTMF input) {
 
 DTMF PAsound::getLastDTMF() { return lastDTMF; }
 
+std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
+  std::array<float, 2> result;
+  result[0] = dtmf_freqs[(int)dt / 4];
+  result[1] = dtmf_freqs[(int)dt % 4 + 4];
+  return result;
+};
+
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
   std::cout << std::endl;
@@ -153,9 +160,9 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
         findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
 
     switch (dtmf) {
-    case DTMF::error:
+    case DTMF::ERROR:
       break;
-    case DTMF::end:
+    case DTMF::WALL:
       sound->insertInputBuffer(dtmf);
       /* sound->setListening(false); */
       break;

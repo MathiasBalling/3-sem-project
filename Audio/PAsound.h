@@ -55,5 +55,7 @@ private:
 
   // For input
   std::deque<DTMF> inputBuffer;
-  DTMF lastDTMF = DTMF::error;
+  DTMF lastDTMF = DTMF::ERROR;
+
+  std::array<float, 2> DTMFtoFreq(DTMF dt);
 };
