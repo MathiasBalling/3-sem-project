@@ -35,8 +35,9 @@ public:
   void setListening(bool listen);
   int getSampleRate();
   float getDTime();
-  void insertInputBuffer(char input);
-  char getLastChar();
+  void insertInputBuffer(DTMF input);
+  std::deque<DTMF> getInputBuffer();
+  DTMF getLastDTMF();
   /* std::pair() processInput(); */
 
 private:
@@ -48,7 +49,7 @@ private:
   bool isStreamActive = false;
   bool listening = false;
 
-  int SampleRate = 44800;
+  int SampleRate = 48000;
   float dTime = 1. / SampleRate;
   int duration = 50;
   // Queue for sound objects
@@ -59,6 +60,6 @@ private:
   int inputDevice;
 
   // For input
-  std::deque<char> inputBuffer;
-  char lastChar = -1;
+  std::deque<DTMF> inputBuffer;
+  DTMF lastDTMF = DTMF::error;
 };

@@ -67,7 +67,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   result.push_back(DTMF::end);
   return result;
 }
-std::vector<float> DTMFdecode(const std::vector<DTMF> &input, int start,
+std::vector<float> DTMFdecode(const std::deque<DTMF> &input, int start,
                               int end) {
   std::vector<float> result;
   int index = start;
@@ -104,7 +104,7 @@ std::vector<float> DTMFdecode(const std::vector<DTMF> &input, int start,
   return result;
 }
 
-std::pair<Operation, std::vector<float>> DTMFtoData(std::vector<DTMF> input) {
+std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
   // Error dectection
   while (1) {
     if (input.front() == DTMF::start) {

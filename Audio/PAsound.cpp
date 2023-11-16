@@ -26,12 +26,12 @@ int PAsound::getSampleRate() { return SampleRate; }
 
 float PAsound::getDTime() { return dTime; }
 
-void PAsound::insertInputBuffer(char input) {
+void PAsound::insertInputBuffer(DTMF input) {
   inputBuffer.push_back(input);
-  lastChar = input;
+  lastDTMF = input;
 }
 
-char PAsound::getLastChar() { return lastChar; }
+DTMF PAsound::getLastDTMF() { return lastDTMF; }
 
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
@@ -136,6 +136,8 @@ void PAsound::stop() {
   isStreamActive = false;
 }
 
+std::deque<DTMF> PAsound::getInputBuffer(){ return inputBuffer; }
+
 int audioCallback(const void *inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
                   const PaStreamCallbackTimeInfo *timeInfo,
@@ -146,17 +148,18 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   (void)statusFlags;
   PAsound *sound = (PAsound *)userData;
   if (sound->isListening()) {
-    char dtmf =
+    DTMF dtmf =
         findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+    
     switch (dtmf) {
-    case -1:
+    case DTMF::error:
       break;
-    case '#':
+    case DTMF::end:
       sound->insertInputBuffer(dtmf);
       sound->setListening(false);
       break;
     default:
-      if (sound->getLastChar() != dtmf)
+      if (sound->getLastDTMF() != dtmf)
         sound->insertInputBuffer(dtmf);
       break;
     }

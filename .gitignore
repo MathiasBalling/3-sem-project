@@ -1,7 +1,9 @@
 // C-make
 .cache/
 .DS_Store
+.vscode
 build/
 compile_commands.json
 Release/
 Debug/
+MakeFile

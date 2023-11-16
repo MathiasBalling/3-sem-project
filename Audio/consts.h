@@ -33,7 +33,8 @@ enum DTMF {
   start,    // *
   divide,   // 0
   end,      // #
-  wall      // D
+  wall,     // D
+  error
 };
 
 const std::string indexToOperation[8] = {"Error",      "Forward", "Backward",

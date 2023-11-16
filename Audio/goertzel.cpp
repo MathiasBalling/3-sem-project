@@ -21,7 +21,7 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
   return magnitude;
 }
 
-char findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
+DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
   // DTMF frequencies
   float dtmf_mag[8];
   for (int i = 0; i < 8; i++) {
@@ -42,7 +42,9 @@ char findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
 
   // Find the corresponding key
   float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
-  if (mean > 10)
-    return indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4];
-  return -1;
+  if (mean > 10){
+    std::cout <<  indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4] << " " << mean << std::endl;
+    return DTMF(index_low_freqs * 4 + index_high_freqs % 4);
+  }
+  return DTMF::error;
 }
