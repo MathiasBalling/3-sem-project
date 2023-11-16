@@ -1,18 +1,20 @@
 #include "PAsound.h"
 #include "consts.h"
 #include "protocol.h"
+#include <arm_neon.h>
 #include <iostream>
 
 int main() {
   Operation op = Operation::COORDINATE;
-  std::vector<float> data = {1.2, 3.4};
+  std::vector<float> data = {};
   PAsound sound;
   sound.init(0);
-
   char c;
   bool quit = false;
   while (!quit) {
     system("clear");
+    float16_t a = 10000.1;
+    std::cout << sizeof(long long) << std::endl;
     std::cout << "Press:"
               << "\n"
               << "'q' quit!"
