@@ -5,7 +5,7 @@
 #include <iostream>
 #include <memory>
 
-int smain(int argc, char **argv) {
+int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
   auto publisher = std::make_shared<RB3_cpp_publisher>();
   PAsound sound;
