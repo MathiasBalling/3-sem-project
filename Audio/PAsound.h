@@ -1,4 +1,5 @@
 #pragma once
+#include "SoundObject.h"
 #include "consts.h"
 #include "portaudio.h"
 #include <deque>
