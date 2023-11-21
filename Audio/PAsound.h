@@ -25,8 +25,8 @@ public:
   void stop();
   bool isQueueEmpty();
   std::queue<SoundObject> *getQueue();
-  bool isListening();
-  void setListening(bool listen);
+  State getState();
+  void setState(State state);
   int getSampleRate();
   float getDTime();
   void insertInputBuffer(DTMF input);
@@ -40,15 +40,14 @@ private:
   PaStream *stream;
   PaError err;
   bool isStreamActive = false;
-  bool listening = false;
-
+  State state = State::WAITING;
   int SampleRate = SAMPLE_RATE;
   float dTime = 1. / SampleRate;
   int duration = DURATION;
   int samples = duration * SampleRate / 1000.;
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
-
+  
   // Device variables
   int outputDevice;
   int inputDevice;

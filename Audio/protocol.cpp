@@ -83,7 +83,6 @@ std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
     result.push_back(dataInFloat);
     data >>= FLOATSIZE;
     dataSize -= FLOATSIZE;
-    printData(data, 2);
   }
 
   return std::make_pair(op, result);
