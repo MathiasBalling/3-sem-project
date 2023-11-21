@@ -44,6 +44,13 @@ enum class Operation {
   LIDAR
 };
 
+enum class State {
+  WAITING,
+  LISTENING,
+  SENDING,
+  PROCESSING
+};
+
 const std::string indexToOperation[10] = {
     "Error", "Acknowledge", "Forward",  "Backward",   "Left",
     "Right", "Stop",        "Movement", "Coordinate", "lidar"};

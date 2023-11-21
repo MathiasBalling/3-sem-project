@@ -17,7 +17,7 @@ public:
     publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel",10);
   }
 
-private:
+
   // Class function to be called when you want to publish velocity commands
   void publish_vel(float lin_vel_cmd, float ang_vel_cmd){
     // Set angular velocity to desired value (ie. turning)
@@ -34,7 +34,7 @@ private:
 
     publisher_->publish(msg);
   }
-
+private:
   // Private variables used for the publisher
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
   geometry_msgs::msg::Twist msg;
