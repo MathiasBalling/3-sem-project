@@ -6,6 +6,11 @@
 #define SAMPLE_RATE (48000)
 #define DURATION (200)
 
+#define BASE (14)
+#define HEADERSIZE (6)
+#define OPERATIONSIZE (4)
+#define FLOATSIZE (24)
+
 enum class DTMF {
   ZERO = 0, // 1 // 0
   ONE,      // 2 // 1

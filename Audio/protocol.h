@@ -15,6 +15,6 @@ std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input);
 std::pair<Operation, std::vector<float>>
 DTMFdecode(const std::deque<DTMF> &input);
 
-long long int dataEncode(std::vector<float> inputData);
+int dataEncode(float inputData);
 
 void printData(long long int data, int base);
