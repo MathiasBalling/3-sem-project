@@ -30,3 +30,5 @@ target_link_libraries(Audio
 add_executable(Visual
 Tests/Visual/visual.cpp)
 target_link_libraries(Visual ${OpenCV_LIBS})
+
+add_executable(Float Tests/float/float.cpp)
