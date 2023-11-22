@@ -19,9 +19,9 @@ class PAsound {
 public:
   PAsound();
   ~PAsound();
-  void init(bool verbose = false);
+  void init(bool verbose = false, State state = State::WAITING);
   void findDevices();
-  void play(Operation op, std::vector<float> data);
+  void play(Operation op, std::vector<float> data = {});
   void play(DTMF dtmf);
   void stop();
   bool isQueueEmpty();
@@ -36,25 +36,25 @@ public:
 
 private:
   // PortAudio variables
-  PaStreamParameters outputParameters;
-  PaStreamParameters inputParameters;
-  PaStream *stream;
-  PaError err;
-  bool isStreamActive = false;
-  State state = State::WAITING;
-  int SampleRate = SAMPLE_RATE;
-  float dTime = 1. / SampleRate;
-  int samples = DURATION_MS * SampleRate / 1000.;
+  PaStreamParameters m_outputParameters;
+  PaStreamParameters m_inputParameters;
+  PaStream *m_stream;
+  PaError m_err;
+  bool m_isStreamActive = false;
+  State m_state = State::WAITING;
+  int m_sampleRate = SAMPLE_RATE;
+  float m_dTime = 1. / m_sampleRate;
+  int m_samples = DURATION_MS * m_sampleRate / 1000.;
   // Queue for sound objects
-  std::queue<SoundObject> soundQueue;
+  std::queue<SoundObject> m_soundQueue;
 
   // Device variables
   int outputDevice;
   int inputDevice;
 
   // For input
-  std::deque<DTMF> inputBuffer;
-  DTMF lastDTMF = DTMF::ERROR;
+  std::deque<DTMF> m_inputBuffer;
+  DTMF m_lastDTMF = DTMF::ERROR;
 
   std::array<float, 2> DTMFtoFreq(DTMF dt);
 };

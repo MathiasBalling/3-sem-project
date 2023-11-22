@@ -14,24 +14,24 @@ PAsound::PAsound() {
 }
 
 PAsound::~PAsound() {
-  Pa_CloseStream(stream);
+  Pa_CloseStream(m_stream);
   Pa_Terminate();
 }
 
-void PAsound::setState(State newState) { state = newState; }
+void PAsound::setState(State newState) { m_state = newState; }
 
-State PAsound::getState() { return state; }
+State PAsound::getState() { return m_state; }
 
-int PAsound::getSampleRate() { return SampleRate; }
+int PAsound::getSampleRate() { return m_sampleRate; }
 
-float PAsound::getDTime() { return dTime; }
+float PAsound::getDTime() { return m_dTime; }
 
 void PAsound::insertInputBuffer(DTMF input) {
-  inputBuffer.push_back(input);
-  lastDTMF = input;
+  m_inputBuffer.push_back(input);
+  m_lastDTMF = input;
 }
 
-DTMF PAsound::getLastDTMF() { return lastDTMF; }
+DTMF PAsound::getLastDTMF() { return m_lastDTMF; }
 
 std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
   std::array<float, 2> result;
@@ -57,7 +57,7 @@ void PAsound::findDevices() {
   }
 }
 
-void PAsound::init(bool verbose) {
+void PAsound::init(bool verbose, State state) {
   if (verbose) {
     findDevices();
     int input;
@@ -73,9 +73,9 @@ void PAsound::init(bool verbose) {
     std::cout << "Enter sample rate (-1 for default): ";
     std::cin >> input;
     if (input != -1) {
-      SampleRate = input;
+      m_sampleRate = input;
     } else {
-      SampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
+      m_sampleRate = Pa_GetDeviceInfo(outputDevice)->defaultSampleRate;
     }
     std::cout << std::endl;
     std::cout << "Default input device: " << inputDevice << std::endl;
@@ -86,72 +86,75 @@ void PAsound::init(bool verbose) {
     }
     std::cout << std::endl;
   }
-  // Set up output stream
-  outputParameters.device = outputDevice;
-  if (outputParameters.device == paNoDevice) {
+  m_state = state;
+  // Set up output m_stream
+  m_outputParameters.device = outputDevice;
+  if (m_outputParameters.device == paNoDevice) {
     std::cout << "Error: No default output device." << std::endl;
   }
-  outputParameters.channelCount = 1;         /* mono output */
-  outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-  outputParameters.suggestedLatency =
-      Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
-  outputParameters.hostApiSpecificStreamInfo = NULL;
-  // Set up input stream
-  inputParameters.device = inputDevice;
-  if (inputParameters.device == paNoDevice) {
+  m_outputParameters.channelCount = 1; /* mono output */
+  m_outputParameters.sampleFormat =
+      paFloat32; /* 32 bit floating point output */
+  m_outputParameters.suggestedLatency =
+      Pa_GetDeviceInfo(m_outputParameters.device)->defaultLowOutputLatency;
+  m_outputParameters.hostApiSpecificStreamInfo = NULL;
+  // Set up input m_stream
+  m_inputParameters.device = inputDevice;
+  if (m_inputParameters.device == paNoDevice) {
     std::cout << "Error: No default input device." << std::endl;
   }
-  inputParameters.channelCount = 1;         /* mono input */
-  inputParameters.sampleFormat = paFloat32; /* 32 bit floating point input */
-  inputParameters.suggestedLatency =
-      Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
-  inputParameters.hostApiSpecificStreamInfo = NULL;
-  // Open stream
-  err = Pa_OpenStream(&stream, &inputParameters, &outputParameters, SampleRate,
-                      BUFFER_SIZE, paClipOff, audioCallback, this);
-  if (err != paNoError) {
-    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
+  m_inputParameters.channelCount = 1;         /* mono input */
+  m_inputParameters.sampleFormat = paFloat32; /* 32 bit floating point input */
+  m_inputParameters.suggestedLatency =
+      Pa_GetDeviceInfo(m_inputParameters.device)->defaultLowInputLatency;
+  m_inputParameters.hostApiSpecificStreamInfo = NULL;
+  // Open m_stream
+  m_err =
+      Pa_OpenStream(&m_stream, &m_inputParameters, &m_outputParameters,
+                    m_sampleRate, BUFFER_SIZE, paClipOff, audioCallback, this);
+  if (m_err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(m_err) << std::endl;
   }
-  err = Pa_StartStream(stream);
-  if (err != paNoError) {
-    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
+  m_err = Pa_StartStream(m_stream);
+  if (m_err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(m_err) << std::endl;
   }
 }
 
-bool PAsound::isQueueEmpty() { return soundQueue.empty(); }
+bool PAsound::isQueueEmpty() { return m_soundQueue.empty(); }
 
-std::queue<SoundObject> *PAsound::getQueue() { return &soundQueue; }
+std::queue<SoundObject> *PAsound::getQueue() { return &m_soundQueue; }
 
 void PAsound::play(Operation op, std::vector<float> data) {
   std::vector<DTMF> send = dataToDTMF(op, data);
   for (auto dtmf : send) {
     std::array<float, 2> freqs = DTMFtoFreq(dtmf);
-    SoundObject sound({freqs, samples, 0, 0});
-    soundQueue.push(sound);
+    SoundObject sound({freqs, m_samples, 0, 0});
+    m_soundQueue.push(sound);
   }
 }
 
 void PAsound::play(DTMF dtmf) {
   std::array<float, 2> freqs = DTMFtoFreq(dtmf);
-  SoundObject sound({freqs, samples, 0, 0});
-  soundQueue.push(sound);
+  SoundObject sound({freqs, m_samples, 0, 0});
+  m_soundQueue.push(sound);
 }
 void PAsound::stop() {
   std::cout << "Stopping Stream" << std::endl;
-  PaError err = Pa_AbortStream(stream);
-  if (err != paNoError) {
-    std::cout << "Error: " << Pa_GetErrorText(err) << std::endl;
+  PaError m_err = Pa_AbortStream(m_stream);
+  if (m_err != paNoError) {
+    std::cout << "Error: " << Pa_GetErrorText(m_err) << std::endl;
   }
-  isStreamActive = false;
+  m_isStreamActive = false;
 }
 
 std::pair<Operation, std::vector<float>> PAsound::processInput() {
-  std::pair<Operation, std::vector<float>> res = DTMFtoData(inputBuffer);
-  inputBuffer.clear();
+  std::pair<Operation, std::vector<float>> res = DTMFtoData(m_inputBuffer);
+  m_inputBuffer.clear();
   return res;
 }
 
-int audioCallback(const void *inputBuffer, void *outputBuffer,
+int audioCallback(const void *m_inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
                   const PaStreamCallbackTimeInfo *timeInfo,
                   PaStreamCallbackFlags statusFlags, void *userData) {
@@ -161,11 +164,11 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   (void)statusFlags;
   PAsound *sound = (PAsound *)userData;
   DTMF dtmf =
-      findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+      findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)m_inputBuffer);
   switch (sound->getState()) {
   case State::WAITING: {
-    dtmf =
-        findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+    dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
+                    (float *)m_inputBuffer);
     if (dtmf == DTMF::WALL) {
       sound->insertInputBuffer(dtmf);
       sound->setState(State::LISTENING);
@@ -173,8 +176,8 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
     break;
   }
   case State::LISTENING: {
-    dtmf =
-        findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+    dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
+                    (float *)m_inputBuffer);
     if (sound->getLastDTMF() == dtmf)
       break;
     switch (dtmf) {

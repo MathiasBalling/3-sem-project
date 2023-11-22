@@ -1,71 +1,54 @@
-#include "PAsound.h"
-#include "consts.h"
-#include "protocol.h"
-#include <iostream>
+#include "ControllerPanel.h"
+#include <wx/wx.h>
 
-int main() {
-  Operation op = Operation::COORDINATE;
-  std::vector<float> data = {};
-  PAsound sound;
-  sound.init(0);
-  char c;
-  bool quit = false;
-  while (!quit) {
-    std::cout << sizeof(long long) << std::endl;
-    std::cout << "Press:"
-              << "\n"
-              << "'q' quit!"
-              << "\n"
-              << "'a' move left!"
-              << "\n"
-              << "'d' move right!"
-              << "\n"
-              << "'w' move forward!"
-              << "\n"
-              << "'s' move backward!"
-              << "\n"
-              << "'x' stop!"
-              << "\n"
-              << "'m' linear and angular velocity!"
-              << "\n"
-              << "'c' to move to coordinate!"
-              << "\n";
-    std::cin >> c;
-    switch (c) {
-    case 'a':
-      op = Operation::LEFT;
-      break;
-    case 'd':
-      op = Operation::RIGHT;
-      break;
-    case 'w':
-      op = Operation::FORWARD;
-      break;
-    case 's':
-      op = Operation::BACKWARD;
-      break;
-    case 'x':
-      op = Operation::STOP;
-      break;
-    case 'c':
-      op = Operation::COORDINATE;
-      std::cout << "Enter x and y coordinate: ";
-      std::cin >> data[0];
-      std::cin >> data[1];
-      break;
-    case 'm':
-      op = Operation::MOVEMENT;
-      std::cout << "Enter linear and angular velocity: ";
-      std::cin >> data[0] >> data[1];
-      break;
-    case 'q':
-      quit = true;
-      continue;
-    default:
-      std::cout << "Invalid input!" << std::endl;
-      continue;
-    };
-    sound.play(op, data);
-  }
-  return 0;
+// Declare the controller frame (window)
+class ControllerFrame : public wxFrame {
+public:
+  ControllerFrame(const wxString &title);
+  ~ControllerFrame();
+
+private:
+  void OnAbout(wxCommandEvent &event);
+  ControllerPanel *m_controllerPanel;
+};
+
+// Declare the controller app (application)
+class ControllerApp : public wxApp {
+public:
+  virtual bool OnInit() {
+    ControllerFrame *controllerFrame = new ControllerFrame(wxT("Controller"));
+    controllerFrame->Show(true);
+    return true;
+  };
+};
+
+// Start the controller app
+IMPLEMENT_APP(ControllerApp)
+
+// Define the controller frame (window)
+ControllerFrame::ControllerFrame(const wxString &title)
+    : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(500, 500)) {
+  // Create a logger window
+
+  // Create the menu
+  wxMenu *menuHelp = new wxMenu;
+  menuHelp->Append(wxID_ABOUT);
+
+  wxMenuBar *menuBar = new wxMenuBar;
+  menuBar->Append(menuHelp, "&Help");
+  SetMenuBar(menuBar);
+
+  // Create the controller panel to capture the key events and add text to the
+  // window
+  m_controllerPanel = new ControllerPanel(this);
+
+  Bind(wxEVT_MENU, &ControllerFrame::OnAbout, this, wxID_ABOUT);
 }
+
+void ControllerFrame::OnAbout(wxCommandEvent &event) {
+  wxMessageBox(
+      "This is a controller, that generates DTMF tones to control a robot.",
+      "About the controller", wxOK | wxICON_INFORMATION);
+}
+
+ControllerFrame::~ControllerFrame() { delete m_controllerPanel; }
