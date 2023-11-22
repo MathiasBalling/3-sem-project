@@ -18,9 +18,9 @@ PAsound::~PAsound() {
   Pa_Terminate();
 }
 
-void PAsound::setListening(bool listen) { listening = listen; }
+void PAsound::setState(State newState) { state = newState; }
 
-bool PAsound::isListening() { return listening; }
+State PAsound::getState() { return state; }
 
 int PAsound::getSampleRate() { return SampleRate; }
 
@@ -32,6 +32,13 @@ void PAsound::insertInputBuffer(DTMF input) {
 }
 
 DTMF PAsound::getLastDTMF() { return lastDTMF; }
+
+std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
+  std::array<float, 2> result;
+  result[0] = dtmf_freqs[(int)dt / 4];
+  result[1] = dtmf_freqs[(int)dt % 4 + 4];
+  return result;
+};
 
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
@@ -148,53 +155,77 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
   (void)timeInfo;
   (void)statusFlags;
   PAsound *sound = (PAsound *)userData;
-  if (sound->isListening()) {
-    DTMF dtmf =
+  DTMF dtmf =
+      findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+  switch (sound->getState()) {
+  case State::WAITING: {
+    dtmf =
         findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
-
-    switch (dtmf) {
-    case DTMF::error:
-      break;
-    case DTMF::end:
+    if (dtmf == DTMF::WALL) {
       sound->insertInputBuffer(dtmf);
-      /* sound->setListening(false); */
+      sound->setState(State::LISTENING);
+    }
+    break;
+  }
+  case State::LISTENING: {
+    dtmf =
+        findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)inputBuffer);
+    if (sound->getLastDTMF() == dtmf)
+      break;
+    switch (dtmf) {
+    case DTMF::ERROR:
+      break;
+    case DTMF::WALL:
+      sound->insertInputBuffer(dtmf);
+      sound->setState(State::PROCESSING);
       break;
     default:
-      if (sound->getLastDTMF() != dtmf)
-        sound->insertInputBuffer(dtmf);
+      sound->insertInputBuffer(dtmf);
       break;
     }
-    return paContinue;
+    break;
   }
-  // Fill the buffer with silence if the queue is empty
-  if (sound->isQueueEmpty()) {
-    for (int i = 0; i < framesPerBuffer; i++)
-      *out++ = 0;
-    return paContinue;
-  }
-  SoundObject &soundObject = sound->getQueue()->front();
-  unsigned long i;
-  // FIX: Match the amplitude of the concurrent sounds
-  for (i = 0; i < framesPerBuffer; i++) {
-    if (soundObject.samplesLeft == 0) {
-      sound->getQueue()->pop();
-      if (sound->isQueueEmpty()) {
+  case State::SENDING: {
+    // Fill the buffer with silence if the queue is empty
+    if (sound->isQueueEmpty()) {
+      for (int i = 0; i < framesPerBuffer; i++)
         *out++ = 0;
-        return paContinue;
+      return paContinue;
+    }
+    SoundObject &soundObject = sound->getQueue()->front();
+    unsigned long i;
+    // FIX: Match the amplitude of the concurrent sounds
+    for (i = 0; i < framesPerBuffer; i++) {
+      if (soundObject.samplesLeft == 0) {
+        sound->getQueue()->pop();
+        if (sound->isQueueEmpty()) {
+          *out++ = 0;
+          return paContinue;
+        }
+        soundObject = sound->getQueue()->front();
       }
-      soundObject = sound->getQueue()->front();
+      float sample = 0;
+      for (auto freq : soundObject.freqs) {
+        sample += (float)(sin(freq * soundObject.time * 2 * M_PI) * 1. /
+                          soundObject.freqs.size());
+      }
+      // Fade out the sound when it is about to end
+      if (soundObject.samplesLeft < 100)
+        sample *= soundObject.samplesLeft / 100.;
+      *out++ = sample;
+      soundObject.time += sound->getDTime();
+      soundObject.samplesLeft--;
     }
-    float sample = 0;
-    for (auto freq : soundObject.freqs) {
-      sample += (float)(sin(freq * soundObject.time * 2 * M_PI) * 1. /
-                        soundObject.freqs.size());
-    }
-    // Fade out the sound when it is about to end
-    if (soundObject.samplesLeft < 100)
-      sample *= soundObject.samplesLeft / 100.;
-    *out++ = sample;
-    soundObject.time += sound->getDTime();
-    soundObject.samplesLeft--;
+
+    break;
   }
+  case State::PROCESSING: {
+    break;
+  }
+  default: {
+    break;
+  }
+  }
+
   return paContinue;
 }

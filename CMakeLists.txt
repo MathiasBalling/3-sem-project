@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.25.0)
-project(3semester)
+project(3Semester)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE Release)
 
 find_package(PkgConfig REQUIRED)
 #Find portaudio
@@ -11,18 +13,16 @@ include_directories(${PORTAUDIO_INCLUDE_DIRS})
 #Find opencv
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(Audio)
+
+file(GLOB AUDIO_SRC "Audio/*.cpp Audio/*.h")
 
 #Main implementations
-add_executable(Audio
-Audio/main.cpp
-Audio/PAsound.cpp
-Audio/PAsound.h
-Audio/goertzel.cpp
-Audio/goertzel.h
-Audio/protocol.cpp
-Audio/consts.h
-Audio/SoundObject.h)
-target_link_libraries(Audio
+add_executable(AudioComputer
+Computer/main.cpp
+${AUDIO_SCR}
+)
+target_link_libraries(AudioComputer
 -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
 # Tests--------------------------------------------------------------
@@ -30,3 +30,11 @@ target_link_libraries(Audio
 add_executable(Visual
 Tests/Visual/visual.cpp)
 target_link_libraries(Visual ${OpenCV_LIBS})
+
+add_executable(Float Tests/float/float.cpp)
+
+add_executable(AudioFix
+Tests/Audiofix/audiofix.cpp
+${AUDIO_SRC})
+target_link_libraries(AudioFix
+-L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)

@@ -1,113 +1,96 @@
 #include "protocol.h"
-
-std::array<float, 2> DTMFtoFreq(DTMF dt) {
-  std::array<float, 2> result;
-  result[0] = dtmf_freqs[dt / 4];
-  result[1] = dtmf_freqs[dt % 4 + 4];
-  return result;
-};
+#include "consts.h"
+#include <ostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
-  // Send direction in DTMF
   std::vector<DTMF> result;
-  result.push_back(DTMF::start);
-  result.push_back(static_cast<DTMF>(op));
-  // TODO: Update header with new specs
+  long long int data = 0;
+  int insertIndex = 0;
+  // A long long int is 64 bits
+  // First 6 bits is the size of the data 2^6 = 64
+  int sizeOfData = 4; // The operation is the next 4 bits
   if (op <= Operation::STOP) {
-    result.push_back(DTMF::end);
-    return result;
+    data += sizeOfData;
+  } else if (op > Operation::STOP) {
+    sizeOfData += 2 * FLOATSIZE;
+    data += sizeOfData;
   }
-  // Send other operations with data in DTMF
-  result.push_back(DTMF::wall);
-  int base = 10;
-  int index = 0;
-  for (auto data : inputData) {
-    if (index != 0)
-      result.push_back(DTMF::wall);
-    index++;
-    // Convert negative number to positive
-    if (data < 0) {
-      result.push_back(DTMF::negative);
-      data = -data;
-    }
-    int intdata = data;
-    int remainderdata = round((data - intdata) * 1000);
+  insertIndex += HEADERSIZE;
 
-    // Push the whole part into the vector
-    while (intdata > 0) {
-      result.push_back(DTMF(intdata % base));
-      intdata /= base;
-      if (intdata != 0)
-        result.push_back(DTMF::divide);
-    }
-
-    // Push the decimal part into the vector
-    if (remainderdata > 0) {
-      result.push_back(DTMF::comma);
-      std::vector<int> temp;
-      bool nonZeroBefore = false;
-      while (remainderdata > 0) {
-        int digit = remainderdata % base;
-        if (digit != 0) {
-          nonZeroBefore = true;
-        }
-        if (nonZeroBefore) {
-          temp.push_back(digit);
-        }
-        remainderdata /= base;
-      }
-      for (int i = temp.size() - 1; i >= 0; i--) {
-        result.push_back(static_cast<DTMF>(temp[i]));
-        if (i != 0)
-          result.push_back(DTMF::divide);
-      }
+  data += pow(2, insertIndex) * (int)op;
+  insertIndex += OPERATIONSIZE;
+  if (Operation::STOP < op) {
+    for (int i = 0; i < inputData.size(); i++) {
+      data += (long long int)(pow(2, insertIndex) * dataEncode(inputData[i]));
+      insertIndex += FLOATSIZE;
     }
   }
-
-  result.push_back(DTMF::end);
+  // Convert to DTMF
+  result.push_back(DTMF::WALL); // Start flag
+  DTMF lastDtmf = DTMF::WALL;
+  while (data > 0) {
+    DTMF dtmf = (DTMF)(data % BASE);
+    if (dtmf == lastDtmf) {
+      result.push_back(DTMF::DIVIDE);
+    }
+    result.push_back(dtmf);
+    lastDtmf = dtmf;
+    data /= BASE;
+  }
+  result.push_back(DTMF::WALL); // End flag
   return result;
 }
-std::vector<float> DTMFdecode(const std::deque<DTMF> &input, int start,
-                              int end) {
-  std::vector<float> result;
-  int index = start;
-  while (index < end) {
-    float temp = 0;
-    bool isNegative = false;
-    bool isDecimal = false;
-    int decimalPlace = 10;
-    // Loop through a data element
-    while ((input[index] != DTMF::wall) && (input[index] != DTMF::end)) {
-      if (input[index] == DTMF::divide) {
-        // Do nothing
-      } else if (input[index] == DTMF::negative) {
-        isNegative = true;
-      } else if (input[index] == DTMF::comma) {
-        isDecimal = true;
-      } else if (isDecimal) {
-        temp +=
-            static_cast<float>(input[index]) / static_cast<float>(decimalPlace);
-        decimalPlace *= 10;
-      } else {
-        temp *= 10;
-        temp += input[index];
-      }
-      index++;
-    }
 
-    if (isNegative) {
-      temp = -temp;
-    }
-    result.push_back(temp);
-    index++;
+int dataEncode(float inputData) {
+  int data = 0;
+  // XXX is exponent (3 bits)10^-N for 0<=N<=7
+  // E is the sign bit (1 bit) E=1 means -2^20=-1048576
+  // 00000000000000000000 is the mantissa (20 bits) 2^20 = 1048576
+  // XXX E00000000000000000000
+  bool negative = false;
+  int exponent = 0;
+  if (inputData < 0) {
+    negative = true;
+    inputData *= -1;
   }
-  return result;
+  while ((inputData - (int)inputData != 0) && exponent < 8) {
+    inputData *= 10;
+    exponent++;
+  }
+  data = (int)inputData;
+  data += negative << 20;
+  data += exponent << 21;
+
+  return data;
+}
+
+std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
+  std::vector<float> result;
+  printData(data, 2);
+  short dataSize = data & 0b111111;
+  data >>= (int)HEADERSIZE;
+  Operation op = (Operation)(data & 0b1111);
+  dataSize -= (int)OPERATIONSIZE;
+  data >>= (int)OPERATIONSIZE;
+  while (dataSize > 0) {
+    float dataInFloat = 0;
+    dataInFloat = data & 0xFFFFF;
+    short exponent = (data >> 21) & 0b111;
+    dataInFloat *= pow(10, -exponent);
+    if (data >> 20 & 1) {
+      dataInFloat *= -1;
+    }
+    result.push_back(dataInFloat);
+    data >>= FLOATSIZE;
+    dataSize -= FLOATSIZE;
+  }
+
+  return std::make_pair(op, result);
 }
 
 std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
-  // Error dectection
   while (1) {
-    if (input.front() == DTMF::start) {
+    if (input.front() == DTMF::WALL) {
       break;
     }
     input.erase(input.begin());
@@ -115,37 +98,22 @@ std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
       return std::make_pair(Operation::ERROR, std::vector<float>());
     }
   }
+  long long int data = 0;
+  int baseIndex = 0;
+  for (int i = 0; i < input.size(); i++) {
+    if (input[i] != DTMF::DIVIDE && input[i] != DTMF::WALL) {
+      data += (long long int)(pow(BASE, baseIndex) * (long long int)input[i]);
+      baseIndex++;
+    }
+  }
+  return DTMFdecode(data);
+}
 
-  Operation op = (Operation)input[1];
-  // TODO: Update header with new specs
-  if (op <= Operation::STOP) {
-    // Return operation with empty vector
-    return std::make_pair(op, std::vector<float>());
+void printData(long long int data, int base) {
+  std::cout << "Data: ";
+  while (data > 0) {
+    std::cout << (int)(data % base) << " ";
+    data /= base;
   }
-  std::vector<float> result;
-  switch (static_cast<int>(input[1])) {
-  case Operation::MOVEMENT: {
-    int index = 3;
-    result = DTMFdecode(input, index, input.size());
-
-    return std::make_pair(op, result);
-  }
-  case Operation::COORDINATE: {
-    // Start from index 3 to skip start, operation and wall/end
-    int index = 3;
-    result = DTMFdecode(input, index, input.size());
-
-    return std::make_pair(op, result);
-  }
-  case Operation::LIDAR: {
-    // Start from index 3 to skip start, operation and wall/end
-    int index = 3;
-    result = DTMFdecode(input, index, input.size());
-
-    return std::make_pair(op, result);
-  }
-  default:
-    return std::make_pair(op, result);
-  }
-  return std::make_pair(op, result);
+  std::cout << std::endl;
 }

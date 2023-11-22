@@ -6,27 +6,32 @@
 #define SAMPLE_RATE (48000)
 #define DURATION (200)
 
-enum DTMF {
-  zero = 0, // 1
-  one,      // 2
-  two,      // 3
-  three,    // A
-  four,     // 4
-  five,     // 5
-  six,      // 6
-  seven,    // B
-  eight,    // 7
-  nine,     // 8
-  comma,    // 9
-  negative, // C
-  start,    // *
-  divide,   // 0
-  end,      // #
-  wall,     // D
-  error     // If no DTMF is detected
+#define BASE (14)
+#define HEADERSIZE (6)
+#define OPERATIONSIZE (4)
+#define FLOATSIZE (24)
+
+enum class DTMF {
+  ZERO,   // 1 // 0
+  ONE,    // 2 // 1
+  TWO,    // 3 // 2
+  THREE,  // A // 3
+  FOUR,   // 4 // 4
+  FIVE,   // 5 // 5
+  SIX,    // 6 // 6
+  SEVEN,  // B // 7
+  EIGHT,  // 7 // 8
+  NINE,   // 8 // 9
+  A,      // 9 // 10
+  B,      // C // 11
+  C,      // * // 12
+  D,      // 0 // 13
+  WALL,   // # // Start/stop
+  DIVIDE, // D // between dublicate data e.g. 1 1
+  ERROR   // If no DTMF is detected
 };
 
-enum Operation {
+enum class Operation {
   ERROR,
   ACKNOWLEDGE,
   FORWARD,
@@ -38,6 +43,8 @@ enum Operation {
   COORDINATE,
   LIDAR
 };
+
+enum class State { WAITING, LISTENING, SENDING, PROCESSING };
 
 const std::string indexToOperation[10] = {
     "Error", "Acknowledge", "Forward",  "Backward",   "Left",
