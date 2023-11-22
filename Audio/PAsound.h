@@ -22,6 +22,7 @@ public:
   void init(bool verbose = false);
   void findDevices();
   void play(Operation op, std::vector<float> data);
+  void play(DTMF dtmf);
   void stop();
   bool isQueueEmpty();
   std::queue<SoundObject> *getQueue();
@@ -43,8 +44,7 @@ private:
   State state = State::WAITING;
   int SampleRate = SAMPLE_RATE;
   float dTime = 1. / SampleRate;
-  int duration = DURATION;
-  int samples = duration * SampleRate / 1000.;
+  int samples = DURATION_MS * SampleRate / 1000.;
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
 

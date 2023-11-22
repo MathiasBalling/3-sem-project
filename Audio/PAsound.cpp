@@ -126,11 +126,16 @@ void PAsound::play(Operation op, std::vector<float> data) {
   std::vector<DTMF> send = dataToDTMF(op, data);
   for (auto dtmf : send) {
     std::array<float, 2> freqs = DTMFtoFreq(dtmf);
-    SoundObject sound({freqs, samples, 0});
+    SoundObject sound({freqs, samples, 0, 0});
     soundQueue.push(sound);
   }
 }
 
+void PAsound::play(DTMF dtmf) {
+  std::array<float, 2> freqs = DTMFtoFreq(dtmf);
+  SoundObject sound({freqs, samples, 0, 0});
+  soundQueue.push(sound);
+}
 void PAsound::stop() {
   std::cout << "Stopping Stream" << std::endl;
   PaError err = Pa_AbortStream(stream);
@@ -210,11 +215,15 @@ int audioCallback(const void *inputBuffer, void *outputBuffer,
                           soundObject.freqs.size());
       }
       // Fade out the sound when it is about to end
-      if (soundObject.samplesLeft < 100)
-        sample *= soundObject.samplesLeft / 100.;
+      float fade = 200;
+      if (soundObject.samplesLeft < fade)
+        sample *= soundObject.samplesLeft / fade;
+      if (soundObject.samplesDone < fade)
+        sample *= soundObject.samplesDone / fade;
       *out++ = sample;
       soundObject.time += sound->getDTime();
       soundObject.samplesLeft--;
+      soundObject.samplesDone++;
     }
 
     break;

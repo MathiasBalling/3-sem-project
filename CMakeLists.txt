@@ -3,7 +3,8 @@ project(3Semester)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(PkgConfig REQUIRED)
 #Find portaudio
@@ -13,15 +14,14 @@ include_directories(${PORTAUDIO_INCLUDE_DIRS})
 #Find opencv
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
-include_directories(Audio)
+include_directories(Audio/)
 
-file(GLOB AUDIO_SRC "Audio/*.cpp Audio/*.h")
+file(GLOB AUDIO_SRC Audio/*.cpp Audio/*.h)
 
 #Main implementations
 add_executable(AudioComputer
 Computer/main.cpp
-${AUDIO_SCR}
-)
+${AUDIO_SRC})
 target_link_libraries(AudioComputer
 -L/opt/homebrew/Cellar/portaudio/19.7.0/lib -lportaudio)
 
