@@ -47,7 +47,7 @@ private:
   int samples = duration * SampleRate / 1000.;
   // Queue for sound objects
   std::queue<SoundObject> soundQueue;
-  
+
   // Device variables
   int outputDevice;
   int inputDevice;

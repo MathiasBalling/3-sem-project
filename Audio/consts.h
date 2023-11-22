@@ -12,23 +12,23 @@
 #define FLOATSIZE (24)
 
 enum class DTMF {
-  ZERO = 0, // 1 // 0
-  ONE,      // 2 // 1
-  TWO,      // 3 // 2
-  THREE,    // A // 3
-  FOUR,     // 4 // 4
-  FIVE,     // 5 // 5
-  SIX,      // 6 // 6
-  SEVEN,    // B // 7
-  EIGHT,    // 7 // 8
-  NINE,     // 8 // 9
-  A,        // 9 // 10
-  B,        // C // 11
-  C,        // * // 12
-  D,        // 0 // 13
-  WALL,     // # // Start/stop
-  DIVIDE,   // D // between dublicate data e.g. 1 1
-  ERROR     // If no DTMF is detected
+  ZERO,   // 1 // 0
+  ONE,    // 2 // 1
+  TWO,    // 3 // 2
+  THREE,  // A // 3
+  FOUR,   // 4 // 4
+  FIVE,   // 5 // 5
+  SIX,    // 6 // 6
+  SEVEN,  // B // 7
+  EIGHT,  // 7 // 8
+  NINE,   // 8 // 9
+  A,      // 9 // 10
+  B,      // C // 11
+  C,      // * // 12
+  D,      // 0 // 13
+  WALL,   // # // Start/stop
+  DIVIDE, // D // between dublicate data e.g. 1 1
+  ERROR   // If no DTMF is detected
 };
 
 enum class Operation {
@@ -44,12 +44,7 @@ enum class Operation {
   LIDAR
 };
 
-enum class State {
-  WAITING,
-  LISTENING,
-  SENDING,
-  PROCESSING
-};
+enum class State { WAITING, LISTENING, SENDING, PROCESSING };
 
 const std::string indexToOperation[10] = {
     "Error", "Acknowledge", "Forward",  "Backward",   "Left",
