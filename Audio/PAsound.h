@@ -21,8 +21,9 @@ public:
   ~PAsound();
   void init(bool verbose = false, State state = State::WAITING);
   void findDevices();
-  void play(Operation op, std::vector<float> data = {});
-  void play(DTMF dtmf);
+  void play(Operation op, std::vector<float> data = {},
+            int duration = (int)DURATION_MS);
+  void play(DTMF dtmf, int duration = (int)DURATION_MS);
   void stop();
   bool isQueueEmpty();
   std::queue<SoundObject> *getQueue();
@@ -44,13 +45,12 @@ private:
   State m_state = State::WAITING;
   int m_sampleRate = SAMPLE_RATE;
   float m_dTime = 1. / m_sampleRate;
-  int m_samples = DURATION_MS * m_sampleRate / 1000.;
   // Queue for sound objects
   std::queue<SoundObject> m_soundQueue;
 
   // Device variables
-  int outputDevice;
-  int inputDevice;
+  int m_outputDevice;
+  int m_inputDevice;
 
   // For input
   std::deque<DTMF> m_inputBuffer;

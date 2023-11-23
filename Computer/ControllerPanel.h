@@ -12,8 +12,10 @@ public:
 private:
   std::unique_ptr<PAsound> m_paSound;
   wxTextCtrl *m_textCtrl;
+  int m_duration = DURATION_MS;
+  std::pair<float, float> m_movement = {0, 0};
 
-  // A helper function to create the dialog items
+  // A helper function to create the panels content and layout
   void createLayout();
 
   // Event handlers

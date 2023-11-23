@@ -27,7 +27,7 @@ IMPLEMENT_APP(ControllerApp)
 
 // Define the controller frame (window)
 ControllerFrame::ControllerFrame(const wxString &title)
-    : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(500, 500)) {
+    : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(600, 300)) {
   // Create a logger window
 
   // Create the menu
