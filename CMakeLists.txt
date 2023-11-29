@@ -35,7 +35,7 @@ include_directories(Audio/)
 
 file(GLOB COMPUTER_SRC Computer/*.cpp Computer/*.h)
 
-file(GLOB ROBOT_SRC Tests/*.cpp Tests/*.h)
+file(GLOB ROBOT_SRC Robot/*.cpp Robot/*.h)
 
 #Main implementations
 add_executable(AudioComputer
