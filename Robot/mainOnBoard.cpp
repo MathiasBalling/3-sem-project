@@ -33,14 +33,14 @@ int main(int argc, char **argv) {
       }
       case Operation::RIGHT: {
         currentAngular -= 0.1;
-        if (currentAngular < -1.82)
-          currentAngular = -1.82;
+        if (currentAngular < -2.84)
+          currentAngular = -2.84;
         break;
       }
       case Operation::LEFT: {
         currentAngular += 0.1;
-        if (currentAngular < 1.82)
-          currentAngular = 1.82;
+        if (currentAngular < 2.84)
+          currentAngular = 2.84;
         break;
       }
       case Operation::STOP: {
@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
         else if (currentLinear > 0.26)
           currentLinear = 0.26;
         currentAngular = input.second[1];
-        if (currentAngular < -1.82)
-          currentAngular = -1.82;
-        else if (currentAngular > 1.82)
-          currentAngular = 1.82;
+        if (currentAngular < -2.84)
+          currentAngular = -2.84;
+        else if (currentAngular > 2.84)
+          currentAngular = 2.84;
         break;
       }
       case Operation::ERROR: {
