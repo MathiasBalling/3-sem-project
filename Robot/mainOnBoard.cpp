@@ -20,15 +20,15 @@ int main(int argc, char **argv) {
       std::cout << indexToOperation[(int)input.first] << std::endl;
       switch (input.first) {
       case Operation::FORWARD: {
-        currentLinear += 0.05;
-        if (currentLinear > 0.26)
-          currentLinear = 0.26;
+        currentLinear += 0.03;
+        if (currentLinear > 0.22)
+          currentLinear = 0.22;
         break;
       }
       case Operation::BACKWARD: {
-        currentLinear -= 0.05;
-        if (currentLinear < -0.26)
-          currentLinear = -0.26;
+        currentLinear -= 0.03;
+        if (currentLinear < -0.22)
+          currentLinear = -0.22;
         break;
       }
       case Operation::RIGHT: {
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
       }
       case Operation::LEFT: {
         currentAngular += 0.1;
-        if (currentAngular < 2.84)
+        if (currentAngular > 2.84)
           currentAngular = 2.84;
         break;
       }
@@ -50,10 +50,10 @@ int main(int argc, char **argv) {
       }
       case Operation::MOVEMENT: {
         currentLinear = input.second[0];
-        if (currentLinear < -0.26)
-          currentLinear = -0.26;
-        else if (currentLinear > 0.26)
-          currentLinear = 0.26;
+        if (currentLinear < -0.22)
+          currentLinear = -0.22;
+        else if (currentLinear > 0.22)
+          currentLinear = 0.22;
         currentAngular = input.second[1];
         if (currentAngular < -2.84)
           currentAngular = -2.84;
