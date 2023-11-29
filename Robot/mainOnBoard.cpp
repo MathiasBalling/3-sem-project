@@ -11,14 +11,13 @@ int main(int argc, char **argv) {
   PAsound sound;
   sound.init(1);
 
-
   float currentLinear = 0.0;
   float currentAngular = 0.0;
   while (1) {
-    if (sound.getState()==State::PROCESSING) {
-      
+    if (sound.getState() == State::PROCESSING) {
+
       std::pair<Operation, std::vector<float>> input = sound.processInput();
-      std::cout << (int)input.first << std::endl;
+      std::cout << indexToOperation[(int)input.first] << std::endl;
       switch (input.first) {
       case Operation::FORWARD: {
         currentLinear += 0.1;
@@ -49,8 +48,8 @@ int main(int argc, char **argv) {
       default:
         break;
       }
-      publisher->publish_vel(currentLinear, currentAngular);
-      sound.setState(State::WAITING);
+      if (input.first != Operation::ERROR)
+        publisher->publish_vel(currentLinear, currentAngular);
     }
   }
   rclcpp::shutdown();

@@ -152,6 +152,10 @@ void PAsound::stop() {
 }
 
 std::pair<Operation, std::vector<float>> PAsound::processInput() {
+  if (m_state != State::PROCESSING) {
+    return std::pair<Operation, std::vector<float>>(Operation::ERROR,
+                                                    std::vector<float>());
+  }
   std::pair<Operation, std::vector<float>> res = DTMFtoData(m_inputBuffer);
   m_inputBuffer.clear();
   m_state = State::WAITING;
@@ -209,7 +213,6 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
     }
     SoundObject &soundObject = sound->getQueue()->front();
     unsigned long i;
-    // FIX: Match the amplitude of the concurrent sounds
     for (i = 0; i < framesPerBuffer; i++) {
       if (soundObject.samplesLeft == 0) {
         sound->getQueue()->pop();
