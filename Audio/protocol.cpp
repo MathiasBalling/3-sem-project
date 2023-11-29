@@ -1,5 +1,6 @@
 #include "protocol.h"
 #include "consts.h"
+#include <cmath>
 #include <iostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
