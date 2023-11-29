@@ -188,7 +188,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
     dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
                     (float *)m_inputBuffer);
     if (dtmf == DTMF::WALL) {
-      sound->setLastDTMF(dtmf);
+      sound->insertInputBuffer(dtmf);
       sound->setLastDTMFCount(0);
       sound->setState(State::LISTENING);
     }
@@ -211,13 +211,15 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       case DTMF::WALL:
         if (sound->getLastInput() == DTMF::DIVIDE) {
           sound->setState(State::PROCESSING);
+          sound->insertInputBuffer(dtmf);
+          std::cout << indexToDtmf[(int)dtmf] << std::endl;
         }
-        sound->insertInputBuffer(dtmf);
-        std::cout << indexToDtmf[(int)dtmf] << std::endl;
         break;
       default:
-        sound->insertInputBuffer(dtmf);
-        std::cout << indexToDtmf[(int)dtmf] << std::endl;
+        if (sound->getLastInput() != dtmf) {
+          sound->insertInputBuffer(dtmf);
+          std::cout << indexToDtmf[(int)dtmf] << std::endl;
+        }
         break;
       }
     }

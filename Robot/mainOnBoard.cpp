@@ -14,6 +14,8 @@ int main(int argc, char **argv) {
   float currentLinear = 0.0;
   float currentAngular = 0.0;
   while (1) {
+    if (std::cin.get() == 'q')
+      break;
     if (sound.getState() == State::PROCESSING) {
 
       std::pair<Operation, std::vector<float>> input = sound.processInput();

@@ -4,7 +4,7 @@
 // Constants
 #define BUFFER_SIZE (500)
 #define SAMPLE_RATE (48000)
-#define DURATION_MS (100)
+#define DURATION_MS (30)
 
 #define BASE (14)
 #define HEADERSIZE (6)
