@@ -8,7 +8,6 @@
 PAsound::PAsound() {
   // PortAudio Initialization
   Pa_Initialize();
-  std::cout << "PortAudio initialized" << std::endl;
   m_outputDevice = Pa_GetDefaultOutputDevice();
   m_inputDevice = Pa_GetDefaultInputDevice();
 }
@@ -57,7 +56,7 @@ void PAsound::findDevices() {
   }
 }
 
-void PAsound::init(bool verbose, State state) {
+bool PAsound::init(bool verbose, State state) {
   if (verbose) {
     findDevices();
     int input;
@@ -92,6 +91,7 @@ void PAsound::init(bool verbose, State state) {
   m_outputParameters.device = m_outputDevice;
   if (m_outputParameters.device == paNoDevice) {
     std::cout << "Error: No default output device." << std::endl;
+    return false;
   }
   m_outputParameters.channelCount = 1; /* mono output */
   m_outputParameters.sampleFormat =
@@ -103,6 +103,7 @@ void PAsound::init(bool verbose, State state) {
   m_inputParameters.device = m_inputDevice;
   if (m_inputParameters.device == paNoDevice) {
     std::cout << "Error: No default input device." << std::endl;
+    return false;
   }
   m_inputParameters.channelCount = 1;         /* mono input */
   m_inputParameters.sampleFormat = paFloat32; /* 32 bit floating point input */
@@ -115,11 +116,14 @@ void PAsound::init(bool verbose, State state) {
                     m_sampleRate, BUFFER_SIZE, paClipOff, audioCallback, this);
   if (m_err != paNoError) {
     std::cout << "Error: " << Pa_GetErrorText(m_err) << std::endl;
+    return false;
   }
   m_err = Pa_StartStream(m_stream);
   if (m_err != paNoError) {
     std::cout << "Error: " << Pa_GetErrorText(m_err) << std::endl;
+    return false;
   }
+  return true;
 }
 
 bool PAsound::isQueueEmpty() { return m_soundQueue.empty(); }
@@ -150,6 +154,7 @@ void PAsound::stop() {
 std::pair<Operation, std::vector<float>> PAsound::processInput() {
   std::pair<Operation, std::vector<float>> res = DTMFtoData(m_inputBuffer);
   m_inputBuffer.clear();
+  m_state = State::WAITING;
   return res;
 }
 
@@ -192,6 +197,9 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
     }
     break;
   }
+  case State::PROCESSING: {
+    break;
+  }
   case State::SENDING: {
     // Fill the buffer with silence if the queue is empty
     if (sound->isQueueEmpty()) {
@@ -228,9 +236,6 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       soundObject.samplesDone++;
     }
 
-    break;
-  }
-  case State::PROCESSING: {
     break;
   }
   default: {

@@ -2,10 +2,7 @@
 #include "consts.h"
 #include <array>
 #include <deque>
-#include <iostream>
-#include <string>
 #include <vector>
-#include <cmath>
 
 std::array<float, 2> DTMFtoFreq(DTMF dt);
 

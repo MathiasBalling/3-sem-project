@@ -1,17 +1,43 @@
 #include "ControllerPanel.h"
 #include "consts.h"
 #include <string>
+#include <thread>
 
 ControllerPanel::ControllerPanel(wxFrame *parent)
     : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(500, 500)) {
   Bind(wxEVT_CHAR, &ControllerPanel::OnKeyDown, this);
   m_paSound = std::make_unique<PAsound>();
-  m_paSound.get()->init(0, State::SENDING);
+  bool initialized = m_paSound.get()->init(0, State::SENDING);
+  if (!initialized) {
+    wxLogMessage("PortAudio failed to initialize!");
+  } else {
+    wxLogMessage("PortAudio initialized!");
+  }
   createLayout();
+}
+
+void ControllerPanel::handleAudioInput() {
+  wxLogMessage("Thread started!");
+  while (m_paSound.get()->getState() != State::SENDING) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if (m_paSound.get()->getState() == State::PROCESSING) {
+      auto [op, data] = m_paSound.get()->processInput();
+      wxLogMessage("Operation: %s", indexToOperation[(int)op]);
+      if (op == Operation::MOVEMENT) {
+        wxLogMessage("Linear: %f, Angular: %f", data[0], data[1]);
+      } else if (op > Operation::MOVEMENT) {
+        wxLogMessage("%f, %f", data[0], data[1]);
+      }
+    }
+  }
+  wxLogMessage("Thread stopped!");
 }
 
 ControllerPanel::~ControllerPanel() {
   Unbind(wxEVT_KEY_DOWN, &ControllerPanel::OnKeyDown, this);
+  m_paSound.get()->setState(State::SENDING);
+  if (m_thread.joinable())
+    m_thread.join();
   m_paSound.reset();
 }
 
@@ -96,9 +122,27 @@ void ControllerPanel::createLayout() {
     m_duration = wxAtoi(event.GetString());
   });
   wxStaticText *durationUnitText = new wxStaticText(this, wxID_ANY, wxT("ms"));
+  wxCheckBox *isListeningCheckBox =
+      new wxCheckBox(this, wxID_ANY, wxT("Listen to sound"));
+
+  bool isListening =
+      m_paSound.get()->getState() == State::SENDING ? false : true;
+  isListeningCheckBox->SetValue(isListening);
+  isListeningCheckBox->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent &event) {
+    if (event.IsChecked()) {
+      m_paSound.get()->setState(State::LISTENING);
+      m_thread = std::thread(&ControllerPanel::handleAudioInput, this);
+    } else {
+      m_paSound.get()->setState(State::SENDING);
+      m_paSound.get()->stop();
+      m_thread.join();
+    }
+  });
   durationSizer->Add(durationText, 0, wxALIGN_CENTRE_VERTICAL | wxALL, 5);
   durationSizer->Add(durationCtrl, 0, wxALIGN_CENTRE_VERTICAL);
   durationSizer->Add(durationUnitText, 0, wxALIGN_CENTRE_VERTICAL | wxLEFT, 5);
+  durationSizer->Add(isListeningCheckBox, 0,
+                     wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL | wxLEFT, 10);
 
   // Create sizer for Movement
   wxStaticText *movementText =

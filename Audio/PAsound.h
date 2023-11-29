@@ -19,7 +19,7 @@ class PAsound {
 public:
   PAsound();
   ~PAsound();
-  void init(bool verbose = false, State state = State::WAITING);
+  bool init(bool verbose = false, State state = State::WAITING);
   void findDevices();
   void play(Operation op, std::vector<float> data = {},
             int duration = (int)DURATION_MS);

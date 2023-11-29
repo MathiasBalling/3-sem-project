@@ -1,6 +1,6 @@
 #include "protocol.h"
 #include "consts.h"
-#include <ostream>
+#include <iostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   std::vector<DTMF> result;
@@ -66,13 +66,12 @@ int dataEncode(float inputData) {
 
 std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
   std::vector<float> result;
-  printData(data, 2);
   short dataSize = data & 0b111111;
   data >>= (int)HEADERSIZE;
   Operation op = (Operation)(data & 0b1111);
   dataSize -= (int)OPERATIONSIZE;
   data >>= (int)OPERATIONSIZE;
-  while (dataSize > 0) {
+  for (int i = 0; i < dataSize; i++) {
     float dataInFloat = 0;
     dataInFloat = data & 0xFFFFF;
     short exponent = (data >> 21) & 0b111;
@@ -83,6 +82,10 @@ std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
     result.push_back(dataInFloat);
     data >>= FLOATSIZE;
     dataSize -= FLOATSIZE;
+  }
+
+  if (data != 0 || dataSize != 0) {
+    return std::make_pair(Operation::ERROR, std::vector<float>());
   }
 
   return std::make_pair(op, result);

@@ -10,6 +10,7 @@ public:
 private:
   void OnAbout(wxCommandEvent &event);
   ControllerPanel *m_controllerPanel;
+  wxLog *m_logger;
 };
 
 // Declare the controller app (application)
@@ -29,6 +30,9 @@ IMPLEMENT_APP(ControllerApp)
 ControllerFrame::ControllerFrame(const wxString &title)
     : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(600, 300)) {
   // Create a logger window
+  m_logger = new wxLogWindow(this, "Audio log", true, false);
+  m_logger->SetTimestamp("%H:%M:%S");
+  wxLog::SetActiveTarget(m_logger);
 
   // Create the menu
   wxMenu *menuHelp = new wxMenu;
@@ -51,4 +55,7 @@ void ControllerFrame::OnAbout(wxCommandEvent &event) {
       "About the controller", wxOK | wxICON_INFORMATION);
 }
 
-ControllerFrame::~ControllerFrame() { delete m_controllerPanel; }
+ControllerFrame::~ControllerFrame() {
+  delete m_controllerPanel;
+  delete m_logger;
+}
