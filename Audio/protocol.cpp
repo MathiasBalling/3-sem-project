@@ -38,7 +38,8 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
     lastDtmf = dtmf;
     data /= BASE;
   }
-  result.push_back(DTMF::WALL); // End flag
+  result.push_back(DTMF::DIVIDE); // End flag
+  result.push_back(DTMF::WALL);   // End flag
   return result;
 }
 

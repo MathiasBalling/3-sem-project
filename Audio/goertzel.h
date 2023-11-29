@@ -1,7 +1,5 @@
 #pragma once
 #include "consts.h"
-#include <cmath>
-#include <iostream>
 
 DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]);
 

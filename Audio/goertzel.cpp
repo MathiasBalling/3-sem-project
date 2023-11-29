@@ -1,4 +1,6 @@
 #include "goertzel.h"
+#include <cmath>
+#include <iostream>
 
 float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
                    float *data) {

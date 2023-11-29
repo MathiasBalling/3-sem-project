@@ -34,6 +34,7 @@ public:
 
   // For input
   void insertInputBuffer(DTMF input);
+  DTMF getLastInput();
   DTMF getLastDTMF();
   void setLastDTMF(DTMF dtmf);
   int getLastDTMFCount();

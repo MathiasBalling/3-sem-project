@@ -34,6 +34,7 @@ DTMF PAsound::getLastDTMF() { return m_lastDTMF; }
 void PAsound::setLastDTMF(DTMF dtmf) { m_lastDTMF = dtmf; }
 int PAsound::getLastDTMFCount() { return m_lastDTMFCount; }
 void PAsound::setLastDTMFCount(int count) { m_lastDTMFCount = count; }
+DTMF PAsound::getLastInput() { return m_inputBuffer.back(); }
 
 std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
   std::array<float, 2> result;
@@ -175,10 +176,11 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
   (void)timeInfo;
   (void)statusFlags;
   PAsound *sound = (PAsound *)userData;
-  DTMF dtmf =
-      findDTMF(framesPerBuffer, sound->getSampleRate(), (float *)m_inputBuffer);
+  DTMF dtmf;
   switch (sound->getState()) {
   case State::WAITING: {
+    dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
+                    (float *)m_inputBuffer);
     if (dtmf == DTMF::WALL) {
       sound->setLastDTMF(dtmf);
       sound->setLastDTMFCount(0);
@@ -187,6 +189,9 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
     break;
   }
   case State::LISTENING: {
+
+    dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
+                    (float *)m_inputBuffer);
     if (sound->getLastDTMF() == dtmf) {
       sound->setLastDTMFCount(sound->getLastDTMFCount() + 1);
     } else {
@@ -200,7 +205,9 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       case DTMF::WALL:
         sound->insertInputBuffer(dtmf);
         std::cout << indexToDtmf[(int)dtmf] << std::endl;
-        sound->setState(State::PROCESSING);
+        if (sound->getLastInput() == DTMF::DIVIDE) {
+          sound->setState(State::PROCESSING);
+        }
         break;
       default:
         sound->insertInputBuffer(dtmf);
