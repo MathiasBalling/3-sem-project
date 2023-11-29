@@ -203,11 +203,11 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       case DTMF::ERROR:
         break;
       case DTMF::WALL:
-        sound->insertInputBuffer(dtmf);
-        std::cout << indexToDtmf[(int)dtmf] << std::endl;
         if (sound->getLastInput() == DTMF::DIVIDE) {
           sound->setState(State::PROCESSING);
         }
+        sound->insertInputBuffer(dtmf);
+        std::cout << indexToDtmf[(int)dtmf] << std::endl;
         break;
       default:
         sound->insertInputBuffer(dtmf);
