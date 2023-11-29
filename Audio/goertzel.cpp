@@ -43,8 +43,8 @@ DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
   // Find the corresponding key
   float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
   if (mean > 500) {
-    /*std::cout << indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4] << " "
-              << mean << std::endl;*/
+    std::cout << indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4] << " "
+              << mean << std::endl;
     return DTMF(index_low_freqs * 4 + index_high_freqs % 4);
   }
   return DTMF::ERROR;
