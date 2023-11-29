@@ -31,6 +31,9 @@ void PAsound::insertInputBuffer(DTMF input) {
 }
 
 DTMF PAsound::getLastDTMF() { return m_lastDTMF; }
+void PAsound::setLastDTMF(DTMF dtmf) { m_lastDTMF = dtmf; }
+int PAsound::getLastDTMFCount() { return m_lastDTMFCount; }
+void PAsound::setLastDTMFCount(int count) { m_lastDTMFCount = count; }
 
 std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
   std::array<float, 2> result;
@@ -149,6 +152,7 @@ void PAsound::play(DTMF dtmf, int duration) {
 void PAsound::stop() {
   while (!m_soundQueue.empty())
     m_soundQueue.pop();
+  m_inputBuffer.clear();
 }
 
 std::pair<Operation, std::vector<float>> PAsound::processInput() {
@@ -178,7 +182,6 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
     dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
                     (float *)m_inputBuffer);
     if (dtmf == DTMF::WALL) {
-      sound->insertInputBuffer(dtmf);
       sound->setState(State::LISTENING);
     }
     break;
@@ -186,18 +189,24 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
   case State::LISTENING: {
     dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
                     (float *)m_inputBuffer);
-    if (sound->getLastDTMF() == dtmf)
-      break;
-    switch (dtmf) {
-    case DTMF::ERROR:
-      break;
-    case DTMF::WALL:
-      sound->insertInputBuffer(dtmf);
-      sound->setState(State::PROCESSING);
-      break;
-    default:
-      sound->insertInputBuffer(dtmf);
-      break;
+    if (sound->getLastDTMF() == dtmf) {
+      sound->setLastDTMFCount(sound->getLastDTMFCount() + 1);
+    } else {
+      sound->setLastDTMFCount(0);
+      sound->setLastDTMF(dtmf);
+    }
+    if (sound->getLastDTMFCount() == 4) {
+      switch (dtmf) {
+      case DTMF::ERROR:
+        break;
+      case DTMF::WALL:
+        sound->insertInputBuffer(dtmf);
+        sound->setState(State::PROCESSING);
+        break;
+      default:
+        sound->insertInputBuffer(dtmf);
+        break;
+      }
     }
     break;
   }
@@ -228,7 +237,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
                           soundObject.freqs.size());
       }
       // Fade out the sound when it is about to end
-      float fade = 200;
+      float fade = 150;
       if (soundObject.samplesLeft < fade)
         sample *= soundObject.samplesLeft / fade;
       if (soundObject.samplesDone < fade)

@@ -31,8 +31,13 @@ public:
   void setState(State state);
   int getSampleRate();
   float getDTime();
+
+  // For input
   void insertInputBuffer(DTMF input);
   DTMF getLastDTMF();
+  void setLastDTMF(DTMF dtmf);
+  int getLastDTMFCount();
+  void setLastDTMFCount(int count);
   std::pair<Operation, std::vector<float>> processInput();
 
 private:
@@ -55,6 +60,7 @@ private:
   // For input
   std::deque<DTMF> m_inputBuffer;
   DTMF m_lastDTMF = DTMF::ERROR;
+  int m_lastDTMFCount = 0;
 
   std::array<float, 2> DTMFtoFreq(DTMF dt);
 };

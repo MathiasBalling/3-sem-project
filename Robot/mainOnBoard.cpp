@@ -45,6 +45,10 @@ int main(int argc, char **argv) {
         currentAngular = input.second[1];
         break;
       }
+      case Operation::ERROR: {
+        ;
+      }
+
       default:
         break;
       }
