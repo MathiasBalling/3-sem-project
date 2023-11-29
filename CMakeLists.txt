@@ -54,3 +54,7 @@ target_link_libraries(Visual ${OpenCV_LIBS})
 add_executable(Float Tests/float/float.cpp)
 add_executable(Prot Tests/protocol/prot.cpp ${AUDIO_SRC})
 target_link_libraries(Prot ${PORTAUDIO_DIRS})
+
+add_executable(Goert Tests/goertzel/goert.cpp ${AUDIO_SRC})
+target_link_libraries(Goert ${PORTAUDIO_DIRS})
+

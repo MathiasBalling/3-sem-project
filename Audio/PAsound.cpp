@@ -204,7 +204,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       sound->setLastDTMFCount(0);
       sound->setLastDTMF(dtmf);
     }
-    if (sound->getLastDTMFCount() == 4) {
+    if (sound->getLastDTMFCount() == 2) {
       switch (dtmf) {
       case DTMF::ERROR:
         break;
