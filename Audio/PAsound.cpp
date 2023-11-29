@@ -34,7 +34,13 @@ DTMF PAsound::getLastDTMF() { return m_lastDTMF; }
 void PAsound::setLastDTMF(DTMF dtmf) { m_lastDTMF = dtmf; }
 int PAsound::getLastDTMFCount() { return m_lastDTMFCount; }
 void PAsound::setLastDTMFCount(int count) { m_lastDTMFCount = count; }
-DTMF PAsound::getLastInput() { return m_inputBuffer.back(); }
+DTMF PAsound::getLastInput() {
+  if (!m_inputBuffer.empty()) {
+    return m_inputBuffer.back();
+  } else {
+    return DTMF::ERROR;
+  }
+}
 
 std::array<float, 2> PAsound::DTMFtoFreq(DTMF dt) {
   std::array<float, 2> result;
