@@ -4,20 +4,19 @@
 #include <iostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
-  std::vector<DTMF> result(2);
   long long int data = 0;
-  int insertIndex = 0;
+  int insertIndex = 1;
   // A long long int is 64 bits
   // First 6 bits is the size of the data up to 2^6 = 64
   int sizeOfData = 4; // The operation is the next 4 bits 2^4 = 16
   if (op <= Operation::STOP) {
-    data += sizeOfData;
+    data += pow(2, insertIndex) * sizeOfData;
   } else if (op > Operation::STOP) {
     sizeOfData += 2 * FLOATSIZE;
-    data += sizeOfData;
+    data += pow(2, insertIndex) * sizeOfData;
   }
   insertIndex += HEADERSIZE;
-
+  // Next 4 bits is the operation
   data += pow(2, insertIndex) * (int)op;
   insertIndex += OPERATIONSIZE;
   if (Operation::STOP < op) {
@@ -26,10 +25,24 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
       insertIndex += FLOATSIZE;
     }
   }
+
+  // Calcurate the parity bit
+  int oneCount = 0;
+  long long int tempData = data;
+  while (tempData) {
+    oneCount += tempData & 1;
+    tempData >>= 1;
+  }
+  // Make the data even parity
+  if (oneCount % 2) {
+    data += 1;
+  }
+
   // Convert to DTMF
+  std::vector<DTMF> result;
   result.push_back(DTMF::WALL); // Start flag
   DTMF lastDtmf = DTMF::WALL;
-  while (data > 0) {
+  while (data) {
     DTMF dtmf = (DTMF)(data % BASE);
     if (dtmf == lastDtmf) {
       result.push_back(DTMF::DIVIDE);
@@ -68,6 +81,21 @@ int dataEncode(float &inputData) {
 
 std::pair<Operation, std::vector<float>> DTMFdecode(long long int &data) {
   std::vector<float> result;
+  // Even parity check
+  // Calcurate the parity bit
+  int oneCount = 0;
+  long long int tempData = data;
+  while (tempData) {
+    oneCount += tempData & 1;
+    tempData >>= 1;
+  }
+  // Make the data even parity
+  if ((oneCount % 2) == 1) {
+    return std::make_pair(Operation::ERROR, std::vector<float>());
+  }
+
+  data >>= 1;
+
   // Extract the data size from the first 6 bits of the header
   short dataSize = data & 0b111111;
   data >>= (int)HEADERSIZE;
