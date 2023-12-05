@@ -34,10 +34,10 @@ public:
 
   // For input
   void insertInputBuffer(DTMF input);
-  DTMF getLastInput();
-  DTMF getLastDTMF();
+  DTMF getLastInput() const;
+  DTMF getLastDTMF() const;
   void setLastDTMF(DTMF dtmf);
-  int getLastDTMFCount();
+  int getLastDTMFCount() const;
   void setLastDTMFCount(int count);
   std::pair<Operation, std::vector<float>> processInput();
 
@@ -62,6 +62,4 @@ private:
   std::deque<DTMF> m_inputBuffer;
   DTMF m_lastDTMF = DTMF::ERROR;
   int m_lastDTMFCount = 0;
-
-  std::array<float, 2> DTMFtoFreq(DTMF dt);
 };

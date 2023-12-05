@@ -32,13 +32,13 @@ int main(int argc, char **argv) {
         break;
       }
       case Operation::RIGHT: {
-        currentAngular -= 0.1;
+        currentAngular -= 0.25;
         if (currentAngular < -2.84)
           currentAngular = -2.84;
         break;
       }
       case Operation::LEFT: {
-        currentAngular += 0.1;
+        currentAngular += 0.25;
         if (currentAngular > 2.84)
           currentAngular = 2.84;
         break;

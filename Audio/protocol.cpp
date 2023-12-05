@@ -4,12 +4,12 @@
 #include <iostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
-  std::vector<DTMF> result;
+  std::vector<DTMF> result(2);
   long long int data = 0;
   int insertIndex = 0;
   // A long long int is 64 bits
-  // First 6 bits is the size of the data 2^6 = 64
-  int sizeOfData = 4; // The operation is the next 4 bits
+  // First 6 bits is the size of the data up to 2^6 = 64
+  int sizeOfData = 4; // The operation is the next 4 bits 2^4 = 16
   if (op <= Operation::STOP) {
     data += sizeOfData;
   } else if (op > Operation::STOP) {
@@ -43,7 +43,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   return result;
 }
 
-int dataEncode(float inputData) {
+int dataEncode(float &inputData) {
   int data = 0;
   // XXX is exponent (3 bits)10^-N for 0<=N<=7
   // E is the sign bit (1 bit) E=1 means -2^20=-1048576
@@ -66,13 +66,18 @@ int dataEncode(float inputData) {
   return data;
 }
 
-std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
+std::pair<Operation, std::vector<float>> DTMFdecode(long long int &data) {
   std::vector<float> result;
+  // Extract the data size from the first 6 bits of the header
   short dataSize = data & 0b111111;
   data >>= (int)HEADERSIZE;
+
+  // Extract the operation from the first 4 bits of the data
   Operation op = (Operation)(data & 0b1111);
   dataSize -= (int)OPERATIONSIZE;
   data >>= (int)OPERATIONSIZE;
+
+  // Extract the floats from the rest of the data
   for (int i = 0; i < dataSize; i++) {
     float dataInFloat = 0;
     dataInFloat = data & 0xFFFFF;
@@ -86,6 +91,8 @@ std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
     dataSize -= FLOATSIZE;
   }
 
+  // Check if there is any data left
+  // If there is, then the data is corrupted
   if (data != 0 || dataSize != 0) {
     return std::make_pair(Operation::ERROR, std::vector<float>());
   }
@@ -94,6 +101,7 @@ std::pair<Operation, std::vector<float>> DTMFdecode(long long int data) {
 }
 
 std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
+  // Find the start flag
   while (1) {
     if (input.front() == DTMF::WALL) {
       break;
@@ -105,6 +113,7 @@ std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
   }
   long long int data = 0;
   int baseIndex = 0;
+  // Extract the data
   for (int i = 0; i < input.size(); i++) {
     if (input[i] != DTMF::DIVIDE && input[i] != DTMF::WALL) {
       data += (long long int)(pow(BASE, baseIndex) * (long long int)input[i]);
@@ -114,7 +123,7 @@ std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
   return DTMFdecode(data);
 }
 
-void printData(long long int data, int base) {
+void printData(long long int &data, int base) {
   std::cout << "Data: ";
   while (data > 0) {
     std::cout << (int)(data % base) << " ";

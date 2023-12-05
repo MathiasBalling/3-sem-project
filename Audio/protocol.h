@@ -7,12 +7,9 @@
 std::array<float, 2> DTMFtoFreq(DTMF dt);
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData);
+int dataEncode(float &inputData);
 
 std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input);
+std::pair<Operation, std::vector<float>> DTMFdecode(long long int &data);
 
-std::pair<Operation, std::vector<float>>
-DTMFdecode(const std::deque<DTMF> &input);
-
-int dataEncode(float inputData);
-
-void printData(long long int data, int base);
+void printData(const long long int &data, int base);

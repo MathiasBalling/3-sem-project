@@ -30,7 +30,7 @@ DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
     dtmf_mag[i] = goertzel_mag(numSamples, dtmf_freqs[i], SAMPLING_RATE, data);
   }
 
-  // Find the two largest magnitudes
+  // Find the two largest magnitudes for low and high frequencies
   int index_low_freqs = 0;
   int index_high_freqs = 4;
   for (int i = 1; i < 4; i++) {
@@ -42,9 +42,11 @@ DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
     }
   }
 
-  // Find the corresponding key
-  float mean = (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) / 2;
-  if (mean > 200) {
+  // Find the corresponding DTMF tone
+  float mean =
+      (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) * 0.5;
+  // Only consider the tone if the mean is greater than 50
+  if (mean > 50) {
     std::cout << indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4] << " "
               << mean << std::endl;
     return DTMF(index_low_freqs * 4 + index_high_freqs % 4);

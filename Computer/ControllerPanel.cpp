@@ -5,23 +5,36 @@
 
 ControllerPanel::ControllerPanel(wxFrame *parent)
     : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(500, 500)) {
-  Bind(wxEVT_CHAR, &ControllerPanel::OnKeyDown, this);
+
   m_paSound = std::make_unique<PAsound>();
-  bool initialized = m_paSound.get()->init(0, State::SENDING);
+  bool initialized = m_paSound->init(0, State::SENDING);
   if (!initialized) {
     wxLogMessage("PortAudio failed to initialize!");
   } else {
     wxLogMessage("PortAudio initialized!");
   }
+
   createLayout();
+
+  Bind(wxEVT_CHAR, &ControllerPanel::OnKeyDown, this);
+  m_timer.Bind(wxEVT_TIMER, &ControllerPanel::OnTimer, this);
 }
 
-void ControllerPanel::handleAudioInput() {
+ControllerPanel::~ControllerPanel() {
+  Unbind(wxEVT_KEY_DOWN, &ControllerPanel::OnKeyDown, this);
+
+  // Disable input to stop thread
+  m_paSound->setState(State::SENDING);
+  if (m_thread.joinable())
+    m_thread.join();
+}
+
+void ControllerPanel::handleAudioInput() const {
   wxLogMessage("Thread started!");
-  while (m_paSound.get()->getState() != State::SENDING) {
+  while (m_paSound->getState() != State::SENDING) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    if (m_paSound.get()->getState() == State::PROCESSING) {
-      auto [op, data] = m_paSound.get()->processInput();
+    if (m_paSound->getState() == State::PROCESSING) {
+      auto [op, data] = m_paSound->processInput();
       wxLogMessage("Operation: %s", indexToOperation[(int)op]);
       if (op == Operation::MOVEMENT) {
         wxLogMessage("Linear: %f, Angular: %f", data[0], data[1]);
@@ -33,77 +46,88 @@ void ControllerPanel::handleAudioInput() {
   wxLogMessage("Thread stopped!");
 }
 
-ControllerPanel::~ControllerPanel() {
-  Unbind(wxEVT_KEY_DOWN, &ControllerPanel::OnKeyDown, this);
-  m_paSound.get()->setState(State::SENDING);
-  if (m_thread.joinable())
-    m_thread.join();
-  m_paSound.reset();
-}
+void ControllerPanel::OnTimer(wxTimerEvent &event) { m_isReadyToPlay = true; }
 
 void ControllerPanel::OnKeyDown(wxKeyEvent &event) {
+  if (!m_isReadyToPlay) {
+    return;
+  }
   int keyCode = event.GetKeyCode();
   switch (keyCode) {
   case 'w':
-    m_paSound.get()->play(Operation::FORWARD, {}, m_duration);
+    m_paSound->play(Operation::FORWARD, {}, m_duration);
     break;
   case 'a':
-    m_paSound.get()->play(Operation::LEFT, {}, m_duration);
+    m_paSound->play(Operation::LEFT, {}, m_duration);
     break;
   case 's':
-    m_paSound.get()->play(Operation::BACKWARD, {}, m_duration);
+    m_paSound->play(Operation::BACKWARD, {}, m_duration);
     break;
   case 'd':
-    m_paSound.get()->play(Operation::RIGHT, {}, m_duration);
+    m_paSound->play(Operation::RIGHT, {}, m_duration);
     break;
   case 'x':
-    m_paSound.get()->play(Operation::STOP, {}, m_duration);
+    m_paSound->play(Operation::STOP, {}, m_duration);
     break;
   case 'm':
-    m_paSound.get()->play(Operation::MOVEMENT,
-                          {m_movement.first, m_movement.second}, m_duration);
+    m_paSound->play(Operation::MOVEMENT, {m_movement.first, m_movement.second},
+                    m_duration);
     break;
   case 'q':
-    m_paSound.get()->stop();
-    break;
+    m_paSound->stop();
+    return;
   default:
     wxLogMessage("'%c' is not a valid key!", keyCode);
+    return;
   }
+
+  // Prevent the user from spamming the keyboard
+  m_isReadyToPlay = false;
+  m_timer.StartOnce(m_duration * 3); // 3 times the duration of a DTMF tone
 
   // Skip the event, so that it can be processed by other handlers
   /* event.Skip(); */
 }
 
 void ControllerPanel::OnButtonPressed(wxCommandEvent &event) {
+  if (!m_isReadyToPlay) {
+    return;
+  }
+  // Get the id of the button that was pressed and play the corresponding DTMF
+  // or operation
   int id = event.GetId();
   if (id >= wxID_HIGHEST + 1 && id <= wxID_HIGHEST + 16) {
     int index = id - wxID_HIGHEST - 1;
-    m_paSound.get()->play((DTMF)index, m_duration);
+    m_paSound->play((DTMF)index, m_duration);
   } else {
     switch (id) {
     case wxID_HIGHEST + 17:
-      m_paSound.get()->play(Operation::FORWARD, {}, m_duration);
+      m_paSound->play(Operation::FORWARD, {}, m_duration);
       break;
     case wxID_HIGHEST + 18:
-      m_paSound.get()->play(Operation::LEFT, {}, m_duration);
+      m_paSound->play(Operation::LEFT, {}, m_duration);
       break;
     case wxID_HIGHEST + 19:
-      m_paSound.get()->play(Operation::BACKWARD, {}, m_duration);
+      m_paSound->play(Operation::BACKWARD, {}, m_duration);
       break;
     case wxID_HIGHEST + 20:
-      m_paSound.get()->play(Operation::RIGHT, {}, m_duration);
+      m_paSound->play(Operation::RIGHT, {}, m_duration);
       break;
     case wxID_HIGHEST + 21:
-      m_paSound.get()->play(Operation::STOP, {}, m_duration);
+      m_paSound->play(Operation::STOP, {}, m_duration);
       break;
     case wxID_HIGHEST + 22:
-      m_paSound.get()->play(Operation::MOVEMENT,
-                            {m_movement.first, m_movement.second}, m_duration);
+      m_paSound->play(Operation::MOVEMENT,
+                      {m_movement.first, m_movement.second}, m_duration);
       break;
     default:
-      break;
+      return;
     }
   }
+
+  // Prevent the user from spamming the buttons
+  m_isReadyToPlay = false;
+  m_timer.StartOnce(m_duration * 3);
 }
 
 void ControllerPanel::createLayout() {
@@ -125,16 +149,15 @@ void ControllerPanel::createLayout() {
   wxCheckBox *isListeningCheckBox =
       new wxCheckBox(this, wxID_ANY, wxT("Listen to sound"));
 
-  bool isListening =
-      m_paSound.get()->getState() == State::SENDING ? false : true;
+  bool isListening = m_paSound->getState() == State::SENDING ? false : true;
   isListeningCheckBox->SetValue(isListening);
   isListeningCheckBox->Bind(wxEVT_CHECKBOX, [&](wxCommandEvent &event) {
     if (event.IsChecked()) {
-      m_paSound.get()->setState(State::LISTENING);
+      m_paSound->setState(State::LISTENING);
       m_thread = std::thread(&ControllerPanel::handleAudioInput, this);
     } else {
-      m_paSound.get()->setState(State::SENDING);
-      m_paSound.get()->stop();
+      m_paSound->setState(State::SENDING);
+      m_paSound->stop();
       m_thread.join();
     }
   });
