@@ -22,12 +22,12 @@ enum class DTMF {
   SEVEN,  // B // 7
   EIGHT,  // 7 // 8
   NINE,   // 8 // 9
-  A,      // 9 // 10
-  B,      // C // 11
-  C,      // * // 12
-  D,      // 0 // 13
+  A,      // 9 // a
+  B,      // C // b
+  C,      // * // c
+  D,      // 0 // d
   WALL,   // # // Start/stop
-  DIVIDE, // D // between dublicate data e.g. 1 1
+  DIVIDE, // D // between dublicate DTMF tones e.g. A A -> A D A
   ERROR   // If no DTMF is detected
 };
 

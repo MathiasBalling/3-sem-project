@@ -41,6 +41,7 @@ file(GLOB ROBOT_SRC Robot/*.cpp Robot/*.h)
 add_executable(AudioComputer
 ${COMPUTER_SRC}
 ${AUDIO_SRC})
+target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_link_libraries(AudioComputer
 ${wxWidgets_LIBRARIES}
 ${PORTAUDIO_DIRS})

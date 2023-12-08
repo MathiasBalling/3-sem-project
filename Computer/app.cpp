@@ -50,6 +50,7 @@ ControllerFrame::ControllerFrame(const wxString &title)
 }
 
 void ControllerFrame::OnAbout(wxCommandEvent &event) {
+  (void)event; // To avoid compiler warning about unused parameter
   wxMessageBox(
       "This is a controller, that generates DTMF tones to control a robot.",
       "About the controller", wxOK | wxICON_INFORMATION);

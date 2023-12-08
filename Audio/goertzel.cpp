@@ -47,8 +47,6 @@ DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
       (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) * 0.5;
   // Only consider the tone if the mean is greater than 50
   if (mean > 50) {
-    std::cout << indexToDtmf[index_low_freqs * 4 + index_high_freqs % 4] << " "
-              << mean << std::endl;
     return DTMF(index_low_freqs * 4 + index_high_freqs % 4);
   }
   return DTMF::ERROR;

@@ -4,6 +4,11 @@
 #include "protocol.h"
 #include <cmath>
 #include <iostream>
+// Callbacks
+static int audioCallback(const void *inputBuffer, void *outputBuffer,
+                         unsigned long framesPerBuffer,
+                         const PaStreamCallbackTimeInfo *timeInfo,
+                         PaStreamCallbackFlags statusFlags, void *userData);
 
 PAsound::PAsound() {
   // PortAudio Initialization
@@ -204,7 +209,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       sound->setLastDTMFCount(0);
       sound->setLastDTMF(dtmf);
     }
-    if (sound->getLastDTMFCount() == 2) {
+    if (sound->getLastDTMFCount() == 1) {
       switch (dtmf) {
       case DTMF::ERROR:
         break;
@@ -218,7 +223,6 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
       default:
         if (sound->getLastInput() != dtmf) {
           sound->insertInputBuffer(dtmf);
-          std::cout << indexToDtmf[(int)dtmf] << std::endl;
         }
         break;
       }
@@ -231,7 +235,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
   case State::SENDING: {
     // Fill the buffer with silence if the queue is empty
     if (sound->isQueueEmpty()) {
-      for (int i = 0; i < framesPerBuffer; i++)
+      for (int i = 0; i < (int)framesPerBuffer; i++)
         *out++ = 0;
       return paContinue;
     }

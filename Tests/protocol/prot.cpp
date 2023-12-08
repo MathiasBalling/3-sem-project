@@ -5,7 +5,7 @@
 
 int main() {
   std::vector<float> data = {0.22, 2.84};
-  std::vector<DTMF> dtmf = dataToDTMF(Operation::BACKWARD, data);
+  std::vector<DTMF> dtmf = dataToDTMF(Operation::MOVEMENT, data);
   std::deque<DTMF> output;
   for (int i = 0; i < dtmf.size(); i++) {
     output.push_back(dtmf[i]);
@@ -13,8 +13,8 @@ int main() {
   }
 
   auto res = DTMFtoData(output);
-  std::cout << "\nOperation: " << indexToOperation[(int)res.first] << "\n";
-  /* << "Data: " << res.second[0] << " " << res.second[1] << std::endl; */
+  std::cout << "\nOperation: " << indexToOperation[(int)res.first] << "\n"
+            << "Data: " << res.second[0] << " " << res.second[1] << std::endl;
 
   return 0;
 }

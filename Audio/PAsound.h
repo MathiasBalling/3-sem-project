@@ -7,13 +7,6 @@
 
 std::array<float, 2> DTMFtoFreq(DTMF dt);
 
-// Callbacks
-static void StreamFinished(void *userData);
-static int audioCallback(const void *inputBuffer, void *outputBuffer,
-                         unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo *timeInfo,
-                         PaStreamCallbackFlags statusFlags, void *userData);
-
 // PAsound class
 class PAsound {
 public:
@@ -47,7 +40,6 @@ private:
   PaStreamParameters m_inputParameters;
   PaStream *m_stream;
   PaError m_err;
-  bool m_isStreamActive = false;
   State m_state = State::WAITING;
   int m_sampleRate = SAMPLE_RATE;
   float m_dTime = 1. / m_sampleRate;

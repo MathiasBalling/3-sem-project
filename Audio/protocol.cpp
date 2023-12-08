@@ -1,6 +1,7 @@
 #include "protocol.h"
 #include "consts.h"
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
@@ -20,7 +21,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   data += pow(2, insertIndex) * (int)op;
   insertIndex += OPERATIONSIZE;
   if (Operation::STOP < op) {
-    for (int i = 0; i < inputData.size(); i++) {
+    for (size_t i = 0; i < inputData.size(); i++) {
       data += (long long int)(pow(2, insertIndex) * dataEncode(inputData[i]));
       insertIndex += FLOATSIZE;
     }
@@ -142,7 +143,7 @@ std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
   long long int data = 0;
   int baseIndex = 0;
   // Extract the data
-  for (int i = 0; i < input.size(); i++) {
+  for (size_t i = 0; i < input.size(); i++) {
     if (input[i] != DTMF::DIVIDE && input[i] != DTMF::WALL) {
       data += (long long int)(pow(BASE, baseIndex) * (long long int)input[i]);
       baseIndex++;

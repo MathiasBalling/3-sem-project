@@ -46,13 +46,19 @@ void ControllerPanel::handleAudioInput() const {
   wxLogMessage("Thread stopped!");
 }
 
-void ControllerPanel::OnTimer(wxTimerEvent &event) { m_isReadyToPlay = true; }
+void ControllerPanel::OnTimer(wxTimerEvent &event) {
+  (void)event; // To prevent unused variable warning
+  m_isReadyToPlay = true;
+}
 
 void ControllerPanel::OnKeyDown(wxKeyEvent &event) {
+  int keyCode = event.GetKeyCode();
+  if (keyCode == 'q')
+    m_paSound->stop();
+
   if (!m_isReadyToPlay) {
     return;
   }
-  int keyCode = event.GetKeyCode();
   switch (keyCode) {
   case 'w':
     m_paSound->play(Operation::FORWARD, {}, m_duration);
