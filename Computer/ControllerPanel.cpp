@@ -133,7 +133,7 @@ void ControllerPanel::OnButtonPressed(wxCommandEvent &event) {
 
   // Prevent the user from spamming the buttons
   m_isReadyToPlay = false;
-  m_timer.StartOnce(m_duration * 3);
+  m_timer.StartOnce(m_duration * 4);
 }
 
 void ControllerPanel::createLayout() {

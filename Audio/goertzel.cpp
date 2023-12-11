@@ -1,6 +1,6 @@
 #include "goertzel.h"
+#include "consts.h"
 #include <cmath>
-#include <iostream>
 
 float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
                    float *data) {
@@ -25,29 +25,30 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
 
 DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
   // DTMF frequencies
-  float dtmf_mag[8];
+  float dtmfFreqMag[8];
   for (int i = 0; i < 8; i++) {
-    dtmf_mag[i] = goertzel_mag(numSamples, dtmf_freqs[i], SAMPLING_RATE, data);
+    dtmfFreqMag[i] =
+        goertzel_mag(numSamples, dtmf_freqs[i], SAMPLING_RATE, data);
   }
 
   // Find the two largest magnitudes for low and high frequencies
-  int index_low_freqs = 0;
-  int index_high_freqs = 4;
+  int indexLowFreqs = 0;
+  int indexHighFreqs = 4;
   for (int i = 1; i < 4; i++) {
-    if (dtmf_mag[i] > dtmf_mag[index_low_freqs]) {
-      index_low_freqs = i;
+    if (dtmfFreqMag[i] > dtmfFreqMag[indexLowFreqs]) {
+      indexLowFreqs = i;
     }
-    if (dtmf_mag[i + 4] > dtmf_mag[index_high_freqs]) {
-      index_high_freqs = i + 4;
+    if (dtmfFreqMag[i + 4] > dtmfFreqMag[indexHighFreqs]) {
+      indexHighFreqs = i + 4;
     }
   }
 
   // Find the corresponding DTMF tone
-  float mean =
-      (dtmf_mag[index_low_freqs] + dtmf_mag[index_high_freqs - 4]) * 0.5;
-  // Only consider the tone if the mean is greater than 50
-  if (mean > 50) {
-    return DTMF(index_low_freqs * 4 + index_high_freqs % 4);
+  float meanMag =
+      (dtmfFreqMag[indexLowFreqs] + dtmfFreqMag[indexHighFreqs - 4]) * 0.5;
+  // Only consider the tone if the meanMag is greater than the threshold.
+  if (meanMag > (float)THRESHOLD_MAG_DETECTION) {
+    return DTMF(indexLowFreqs * 4 + indexHighFreqs % 4);
   }
   return DTMF::ERROR;
 }

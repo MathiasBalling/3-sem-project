@@ -8,7 +8,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   long long int data = 0;
   int insertIndex = 1;
   // A long long int is 64 bits
-  // First 6 bits is the size of the data up to 2^6 = 64
+  // First 7 bits is the size of the data up to 2^8-1 = 255
   int sizeOfData = 4; // The operation is the next 4 bits 2^4 = 16
   if (op <= Operation::STOP) {
     data += pow(2, insertIndex) * sizeOfData;

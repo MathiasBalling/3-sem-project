@@ -256,7 +256,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
                           soundObject.freqs.size());
       }
       // Fade out the sound when it is about to end
-      float fade = 150;
+      float fade = (float)SOUND_FADE_STEPS;
       if (soundObject.samplesLeft < fade)
         sample *= soundObject.samplesLeft / fade;
       if (soundObject.samplesDone < fade)
