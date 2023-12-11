@@ -20,10 +20,9 @@
 // Constants for protocol
 #define BASE (14)
 // Base system
-// TODO: Change to Bytes instead of bits
-#define HEADERSIZE (7)    // TO 1
-#define OPERATIONSIZE (4) // TO 1
-#define FLOATSIZE (24)    // TO 3
+#define HEADERSIZE (1)        // 1 Byte
+#define OPERATIONSIZE (1)     // 1 Byte
+#define COSTUM_FLOAT_SIZE (3) // 3 Bytes
 
 enum class State { WAITING, LISTENING, SENDING, PROCESSING };
 

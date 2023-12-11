@@ -3,7 +3,44 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <utility>
 
+std::vector<DTMF> dataToDTMF(Operation op, std::vector<int> inputData) {
+
+  return std::vector<DTMF>{};
+}
+std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
+
+  return std::vector<DTMF>{};
+}
+std::vector<DTMF> dataToDTMF(Operation op, std::string inputData) {
+
+  return std::vector<DTMF>{};
+}
+std::vector<DTMF> dataToDTMF(Operation op) { return std::vector<DTMF>{}; }
+
+std::vector<int> dataFloatEncode(const Operation op,
+                                 const std::vector<float> &inputData) {
+  return std::vector<int>{};
+}
+std::vector<int> dataStringEncode(const Operation op,
+                                  const std::string &inputData) {
+  return std::vector<int>{};
+}
+
+std::pair<Operation, std::vector<int>>
+DTMFtoData(std::queue<DTMF> sampleInput) {
+  return std::make_pair(Operation::ERROR, std::vector<int>{});
+}
+
+std::vector<float> dataFloatDecode(std::vector<int> data) {
+  return std::vector<float>{};
+}
+std::string dataStringDecode(std::vector<int> data) { return ""; }
+
+void printData(const std::vector<int> &data, int base) {}
+
+/*
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
   long long int data = 0;
   int insertIndex = 1;
@@ -160,3 +197,4 @@ void printData(long long int &data, int base) {
   }
   std::cout << std::endl;
 }
+*/

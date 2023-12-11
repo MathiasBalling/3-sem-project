@@ -31,7 +31,7 @@ int PAsound::getSampleRate() { return m_sampleRate; }
 float PAsound::getDTime() { return m_dTime; }
 
 void PAsound::insertInputBuffer(DTMF input) {
-  m_inputBuffer.push_back(input);
+  m_inputBuffer.push(input);
   m_lastDTMF = input;
 }
 
@@ -164,16 +164,16 @@ void PAsound::play(DTMF dtmf, int duration) {
 void PAsound::stop() {
   while (!m_soundQueue.empty())
     m_soundQueue.pop();
-  m_inputBuffer.clear();
 }
 
-std::pair<Operation, std::vector<float>> PAsound::processInput() {
+std::pair<Operation, std::vector<int>> PAsound::processInput() {
   if (m_state != State::PROCESSING) {
-    return std::pair<Operation, std::vector<float>>(Operation::ERROR,
-                                                    std::vector<float>());
+    return std::pair<Operation, std::vector<int>>(Operation::ERROR,
+                                                  std::vector<int>());
   }
-  std::pair<Operation, std::vector<float>> res = DTMFtoData(m_inputBuffer);
-  m_inputBuffer.clear();
+  std::pair<Operation, std::vector<int>> res = DTMFtoData(m_inputBuffer);
+  while (!m_inputBuffer.empty())
+    m_inputBuffer.pop();
   m_state = State::WAITING;
   return res;
 }

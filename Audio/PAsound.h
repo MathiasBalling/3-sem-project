@@ -2,7 +2,6 @@
 #include "SoundObject.h"
 #include "consts.h"
 #include "portaudio.h"
-#include <deque>
 #include <queue>
 
 std::array<float, 2> DTMFtoFreq(DTMF dt);
@@ -32,7 +31,7 @@ public:
   void setLastDTMF(DTMF dtmf);
   int getLastDTMFCount() const;
   void setLastDTMFCount(int count);
-  std::pair<Operation, std::vector<float>> processInput();
+  std::pair<Operation, std::vector<int>> processInput();
 
 private:
   // PortAudio variables
@@ -51,7 +50,7 @@ private:
   int m_inputDevice;
 
   // For input
-  std::deque<DTMF> m_inputBuffer;
+  std::queue<DTMF> m_inputBuffer;
   DTMF m_lastDTMF = DTMF::ERROR;
   int m_lastDTMFCount = 0;
 };

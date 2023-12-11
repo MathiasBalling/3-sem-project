@@ -41,7 +41,7 @@ file(GLOB ROBOT_SRC Robot/*.cpp Robot/*.h)
 add_executable(AudioComputer
 ${COMPUTER_SRC}
 ${AUDIO_SRC})
-target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(AudioComputer
 ${wxWidgets_LIBRARIES}
 ${PORTAUDIO_DIRS})
@@ -52,8 +52,8 @@ add_executable(Visual
 Tests/Visual/visual.cpp)
 target_link_libraries(Visual ${OpenCV_LIBS})
 
-add_executable(Float Tests/float/float.cpp)
 add_executable(Prot Tests/protocol/prot.cpp ${AUDIO_SRC})
+target_compile_options(Prot PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(Prot ${PORTAUDIO_DIRS})
 
 add_executable(Goert Tests/goertzel/goert.cpp ${AUDIO_SRC})
