@@ -20,9 +20,9 @@
 // Constants for protocol
 #define BASE (14)
 // Base system
-#define HEADERSIZE (1)        // 1 Byte
-#define OPERATIONSIZE (1)     // 1 Byte
-#define COSTUM_FLOAT_SIZE (3) // 3 Bytes
+#define HEADER_SIZE_BYTES (1)       // 1 Byte
+#define OPERATION_SIZE_BYTES (1)    // 1 Byte
+#define COSTUM_FLOAT_SIZE_BYTES (3) // 3 Bytes
 
 enum class State { WAITING, LISTENING, SENDING, PROCESSING };
 
@@ -54,25 +54,20 @@ enum class Operation {
   LEFT,
   RIGHT,
   STOP,
-  MOVEMENT,
   UPDATE_MAG_THRESHOLD,
+  MOVEMENT,
   COORDINATE_REL,
-  COORDINATE_ABS,
+  STRING,
   LIDAR
 };
 
-const std::string indexToOperation[12] = {"Error",
-                                          "Acknowledge",
-                                          "Forward",
-                                          "Backward",
-                                          "Left",
-                                          "Right",
-                                          "Stop",
-                                          "Movement",
-                                          "Update Magnetude Threshold",
-                                          "Relative Coordinate",
-                                          "Absolute Coordinate",
-                                          "LIDAR"};
+const std::string indexToOperation[12] = {
+    "Error",    "Acknowledge",
+    "Forward",  "Backward",
+    "Left",     "Right",
+    "Stop",     "Update Magnetude Threshold",
+    "Movement", "Relative Coordinate",
+    "String",   "LIDAR"};
 
 const char indexToDtmf[16] = {'1', '2', '3', 'A', '4', '5', '6', 'B',
                               '7', '8', '9', 'C', '*', '0', '#', 'D'};

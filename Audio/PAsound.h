@@ -31,7 +31,7 @@ public:
   void setLastDTMF(DTMF dtmf);
   int getLastDTMFCount() const;
   void setLastDTMFCount(int count);
-  std::pair<Operation, std::vector<int>> processInput();
+  std::vector<unsigned int> processInput();
 
 private:
   // PortAudio variables

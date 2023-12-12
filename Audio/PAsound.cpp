@@ -166,12 +166,11 @@ void PAsound::stop() {
     m_soundQueue.pop();
 }
 
-std::pair<Operation, std::vector<int>> PAsound::processInput() {
+std::vector<unsigned int> PAsound::processInput() {
   if (m_state != State::PROCESSING) {
-    return std::pair<Operation, std::vector<int>>(Operation::ERROR,
-                                                  std::vector<int>());
+    return std::vector<unsigned int>{};
   }
-  std::pair<Operation, std::vector<int>> res = DTMFtoData(m_inputBuffer);
+  auto res = DTMFtoData(m_inputBuffer);
   while (!m_inputBuffer.empty())
     m_inputBuffer.pop();
   m_state = State::WAITING;
