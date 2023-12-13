@@ -31,7 +31,7 @@ public:
   void setLastDTMF(DTMF dtmf);
   int getLastDTMFCount() const;
   void setLastDTMFCount(int count);
-  std::vector<unsigned int> processInput();
+  std::vector<uint64_t> processInput();
 
   void setMinMagnitude(float minMagnitude);
   float getMinMagnitude();

@@ -1,13 +1,14 @@
 #include "consts.h"
 #include "protocol.h"
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <queue>
 
 int main() {
   std::vector<float> data = {-0.22, 0.22};
   std::string dataString = "Mathias Balling Christiansen";
-  std::vector<DTMF> dtmf = dataToDTMF(Operation::MOVEMENT, data);
+  std::vector<DTMF> dtmf = dataToDTMF(Operation::STRING, dataString);
   std::queue<DTMF> sampleInput;
   for (size_t i = 0; i < dtmf.size(); i++) {
     sampleInput.push(dtmf[i]);
@@ -30,7 +31,7 @@ int main() {
     std::cout << resstring << std::endl;
   }
 
-  /* std::vector<unsigned int> test{5}; */
+  /* std::vector<uint64_t> test{5}; */
   /* test.push_back(14); */
   /* auto test2 = dataBitsToDTMF(test); */
   /* std::queue<DTMF> sampleInput2; */

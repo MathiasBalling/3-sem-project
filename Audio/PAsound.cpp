@@ -166,9 +166,9 @@ void PAsound::stop() {
     m_soundQueue.pop();
 }
 
-std::vector<unsigned int> PAsound::processInput() {
+std::vector<uint64_t> PAsound::processInput() {
   if (m_state != State::PROCESSING) {
-    return std::vector<unsigned int>{};
+    return std::vector<uint64_t>{};
   }
   auto res = DTMFtoData(m_inputBuffer);
   while (!m_inputBuffer.empty())

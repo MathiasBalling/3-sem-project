@@ -2,6 +2,7 @@
 #include "RB3_cpp_publisher.h"
 #include "consts.h"
 #include "protocol.h"
+#include <cstdint>
 #include <iostream>
 #include <memory>
 
@@ -13,7 +14,7 @@ int main(int argc, char **argv) {
 
   float currentLinear = 0.0;
   float currentAngular = 0.0;
-  std::vector<unsigned int> data{};
+  std::vector<uint64_t> data{};
   Operation operation = Operation::ERROR;
   std::vector<float> dataFloats{0, 0};
   while (1) {

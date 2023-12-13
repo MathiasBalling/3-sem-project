@@ -7,14 +7,14 @@
 
 // ---------------------------- Encode -------------------------------
 std::vector<DTMF> dataToDTMF(Operation op) {
-  std::vector<unsigned int> output{};
+  std::vector<uint64_t> output{};
   size_t baseIndex{1}; // Start after parity bit
   size_t dataSize{1};  // Always operation code
-  unsigned int temp{};
+  uint64_t temp{};
   if (op <= Operation::STOP) {
-    temp += pow(2, baseIndex) * dataSize;
+    temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
-    temp += pow(2, baseIndex) * (unsigned int)op;
+    temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;
   } else if (op > Operation::STOP) {
     temp = 0; // Error: Every operation over STOP need inputData or is not
     // defiend yet
@@ -29,8 +29,8 @@ std::vector<DTMF> dataToDTMF(Operation op) {
 }
 
 std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
-  std::vector<unsigned int> output{};
-  unsigned int temp{};
+  std::vector<uint64_t> output{};
+  uint64_t temp{};
   if (op <= Operation::STOP) {
     temp = 0; // Wrong function call
     output.push_back(temp);
@@ -50,8 +50,8 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
 }
 
 std::vector<DTMF> dataToDTMF(Operation op, std::string inputData) {
-  std::vector<unsigned int> output{};
-  unsigned int temp{};
+  std::vector<uint64_t> output{};
+  uint64_t temp{};
   if (op <= Operation::COORDINATE_REL) {
     temp = 0; // Wrong function call
     output.push_back(temp);
@@ -69,22 +69,22 @@ std::vector<DTMF> dataToDTMF(Operation op, std::string inputData) {
   return dataBitsToDTMF(output);
 }
 
-std::vector<unsigned int> dataFloatEncode(const Operation op,
-                                          const std::vector<float> &inputData) {
-  std::vector<unsigned int> outputBits{};
+std::vector<uint64_t> dataFloatEncode(const Operation op,
+                                      const std::vector<float> &inputData) {
+  std::vector<uint64_t> outputBits{};
   if ((inputData.size() * COSTUM_FLOAT_SIZE_BYTES) > (pow(2, 7) - 1)) {
     return outputBits; // To long data input
   }
   size_t baseIndex{1}; // Start after parity bit
   size_t dataSize = 1 + inputData.size() * COSTUM_FLOAT_SIZE_BYTES; // Operation
-  unsigned int temp{};
+  uint64_t temp{};
   size_t maxIndex = sizeof(temp) * 8;
   if (op <= Operation::STOP) {
     return outputBits; // wrong function call
   } else if (op <= Operation::COORDINATE_REL) {
-    temp += pow(2, baseIndex) * dataSize;
+    temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
-    temp += pow(2, baseIndex) * (unsigned int)op;
+    temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;
     baseIndex = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
   } else {
     return outputBits; // Not yet defined og a string
@@ -106,7 +106,7 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
       data *= 10;
       exponent++;
     }
-    unsigned int res = (int)data;
+    uint64_t res = (int)data;
     res += negative << 20;
     res += exponent << 21;
     // Insert into outputBits
@@ -116,7 +116,7 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
         temp = 0;
         baseIndex = 0;
       }
-      temp += pow(2, baseIndex) * (res & 1);
+      temp += (uint64_t)pow(2, baseIndex) * (res & 1);
       res >>= 1;
       baseIndex++;
     }
@@ -127,22 +127,22 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
   return outputBits;
 }
 
-std::vector<unsigned int> dataStringEncode(const Operation op,
-                                           const std::string &inputData) {
-  std::vector<unsigned int> outputBits{};
+std::vector<uint64_t> dataStringEncode(const Operation op,
+                                       const std::string &inputData) {
+  std::vector<uint64_t> outputBits{};
   if (inputData.size() > (pow(2, 7) - 1)) {
     return outputBits; // To long data input
   }
   size_t baseIndex{1}; // Start after parity bit
   size_t dataSize = 1 + inputData.size() * sizeof(char); // Operation
-  unsigned int temp{};
+  uint64_t temp{};
   size_t maxIndex = sizeof(temp) * 8;
   if (op <= Operation::COORDINATE_REL) {
     return outputBits; // wrong function call
   } else if (op == Operation::STRING) {
-    temp += pow(2, baseIndex) * dataSize;
+    temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
-    temp += pow(2, baseIndex) * (unsigned int)op;
+    temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;
     baseIndex = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
   } else {
     return outputBits; // Not yet defined
@@ -154,7 +154,7 @@ std::vector<unsigned int> dataStringEncode(const Operation op,
         temp = 0;
         baseIndex = 0;
       }
-      temp += pow(2, baseIndex) * (data & 1);
+      temp += (uint64_t)pow(2, baseIndex) * (data & 1);
       data >>= 1;
       baseIndex++;
     }
@@ -164,7 +164,7 @@ std::vector<unsigned int> dataStringEncode(const Operation op,
   return outputBits;
 }
 
-std::vector<DTMF> dataBitsToDTMF(const std::vector<unsigned int> &inputData) {
+std::vector<DTMF> dataBitsToDTMF(const std::vector<uint64_t> &inputData) {
   std::vector<DTMF> output;
   // Convert to DTMF
   output.push_back(DTMF::WALL); // Start flag
@@ -172,19 +172,19 @@ std::vector<DTMF> dataBitsToDTMF(const std::vector<unsigned int> &inputData) {
   auto tempData = inputData;
   size_t count{};
   while (!tempData.empty()) {
-    DTMF dtmf = (DTMF)(tempData.at(0) % (unsigned int)BASE);
+    DTMF dtmf = (DTMF)(tempData.at(0) % (uint64_t)BASE);
     if (dtmf == lastDtmf) {
       output.push_back(DTMF::DIVIDE);
     }
     output.push_back(dtmf);
     lastDtmf = dtmf;
-    tempData.at(0) /= (unsigned int)BASE;
+    tempData.at(0) /= (uint64_t)BASE;
     count++;
     if (tempData.at(0) == 0 && tempData.size() == 1) {
       tempData.erase(tempData.begin());
-    } else if (count == 9) {
-      // Log14(uintMax)=8.405≈9
-      // We need 9 DTMF tones to represent a uintMax
+    } else if (count == 17) {
+      // Log14(uint64_tMax)=16.81≈17
+      // We need 17 DTMF tones to represent a uint64_tMax
       tempData.erase(tempData.begin());
       count = 0;
     }
@@ -194,7 +194,7 @@ std::vector<DTMF> dataBitsToDTMF(const std::vector<unsigned int> &inputData) {
   return output;
 }
 // ---------------------------- Decode -------------------------------
-std::vector<unsigned int> DTMFtoData(std::queue<DTMF> sampleInput) {
+std::vector<uint64_t> DTMFtoData(std::queue<DTMF> sampleInput) {
   // Find the start flag
   while (1) {
     if (sampleInput.front() == DTMF::WALL) {
@@ -202,23 +202,23 @@ std::vector<unsigned int> DTMFtoData(std::queue<DTMF> sampleInput) {
     }
     sampleInput.pop();
     if (sampleInput.empty()) {
-      return std::vector<unsigned int>{0};
+      return std::vector<uint64_t>{0};
     }
   }
-  std::vector<unsigned int> sampleBits;
-  unsigned int tempBits = 0;
+  std::vector<uint64_t> sampleBits;
+  uint64_t tempBits = 0;
   size_t baseIndex = 0;
 
   while (!sampleInput.empty()) {
     if (sampleInput.front() != DTMF::DIVIDE &&
         sampleInput.front() != DTMF::WALL) {
-      tempBits += (unsigned int)sampleInput.front() *
-                  (unsigned int)pow(BASE, baseIndex);
+      tempBits +=
+          (uint64_t)sampleInput.front() * (uint64_t)pow(BASE, baseIndex);
       baseIndex++;
 
-      if (baseIndex % 9 == 0) {
-        // Log14(uintMax)=8.405≈9
-        // We need 9 DTMF tones to represent a uintMax
+      if (baseIndex % 17 == 0) {
+      // Log14(uint64_tMax)=16.81≈17
+      // We need 17 DTMF tones to represent a uint64_tMax
         sampleBits.push_back(tempBits);
         tempBits = 0;
         baseIndex = 0;
@@ -230,19 +230,19 @@ std::vector<unsigned int> DTMFtoData(std::queue<DTMF> sampleInput) {
     sampleBits.push_back(tempBits);
   }
   if (!evenParity(sampleBits)) {
-    return std::vector<unsigned int>{0};
+    return std::vector<uint64_t>{0};
   }
 
   return sampleBits;
 }
 
-Operation getOperation(const std::vector<unsigned int> dataInput) {
+Operation getOperation(const std::vector<uint64_t> dataInput) {
 
   // Check the length of the data
   size_t expectedLength = dataInput.at(0) & 0xff;
   expectedLength >>= 1; // Remove parity bit
 
-  unsigned int operation = dataInput.at(0);
+  uint64_t operation = dataInput.at(0);
   operation >>= HEADER_SIZE_BYTES * 8;
   operation &= 0xff;
 
@@ -260,8 +260,8 @@ Operation getOperation(const std::vector<unsigned int> dataInput) {
   }
 
   size_t maxBytesReceived =
-      dataInput.size() * sizeof(unsigned int) - HEADER_SIZE_BYTES;
-  // 4 bytes per unsigned int. Header is not included in data length
+      dataInput.size() * sizeof(uint64_t) - HEADER_SIZE_BYTES;
+  // 8 bytes per uint64_t. Header is not included in data length
 
   if (lengthByte != expectedLength && lengthByte < maxBytesReceived) {
     return Operation::ERROR;
@@ -270,7 +270,7 @@ Operation getOperation(const std::vector<unsigned int> dataInput) {
   }
 }
 
-std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
+std::vector<float> dataFloatDecode(std::vector<uint64_t> data) {
   std::vector<float> output;
   float tempFloat{};
   int exponent{};
@@ -279,7 +279,7 @@ std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
   // Remove parity bit
   data.at(0) >>= 1;
   size_t dataLength =
-      data.at(0) & (unsigned int)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
+      data.at(0) & (uint64_t)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
   data.at(0) >>= HEADER_SIZE_BYTES * 8 - 1;
   data.at(0) >>= OPERATION_SIZE_BYTES * 8;
   dataLength -= OPERATION_SIZE_BYTES;
@@ -291,17 +291,17 @@ std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
 
     if (floatIndex < 20) {
       // Mantissa
-      tempFloat += pow(2, floatIndex) * bit;
+      tempFloat += (uint64_t)pow(2, floatIndex) * bit;
     } else if (floatIndex == 20) {
       // Sign
       if (bit)
         tempFloat *= -1;
     } else if (floatIndex < 24) {
       // Exponent
-      exponent += pow(2, floatIndex - 21) * bit;
+      exponent += (uint64_t)pow(2, floatIndex - 21) * bit;
     }
     if (floatIndex == (COSTUM_FLOAT_SIZE_BYTES * 8 - 1)) {
-      tempFloat *= pow(10, -exponent);
+      tempFloat *= (uint64_t)pow(10, -exponent);
       output.push_back(tempFloat);
       floatIndex = 0;
       tempFloat = 0;
@@ -312,7 +312,7 @@ std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
     }
     index++;
     data.at(0) >>= 1;
-    if (index % (sizeof(unsigned int) * 8) == 0) {
+    if (index % (sizeof(uint64_t) * 8) == 0) {
       index = 0;
       data.erase(data.begin());
     }
@@ -320,13 +320,13 @@ std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
   return output;
 }
 
-std::string dataStringDecode(std::vector<unsigned int> data) {
+std::string dataStringDecode(std::vector<uint64_t> data) {
   std::string output{};
   size_t index{};
   // Remove parity bit
   data.at(0) >>= 1;
   size_t dataLength =
-      data.at(0) & (unsigned int)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
+      data.at(0) & (uint64_t)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
   data.at(0) >>= HEADER_SIZE_BYTES * 8 - 1;
   data.at(0) >>= OPERATION_SIZE_BYTES * 8;
   dataLength -= OPERATION_SIZE_BYTES;
@@ -337,7 +337,7 @@ std::string dataStringDecode(std::vector<unsigned int> data) {
       tempChar += (data.at(0) & 1) << j;
       data.at(0) >>= 1;
       index++;
-      if (index % (sizeof(unsigned int) * 8) == 0) {
+      if (index % (sizeof(uint64_t) * 8) == 0) {
         index = 0;
         data.erase(data.begin());
       }
@@ -348,18 +348,21 @@ std::string dataStringDecode(std::vector<unsigned int> data) {
 }
 
 // ---------------------------- Utils -------------------------------
-void printData(const std::vector<unsigned int> &data, int base) {
+void printData(const std::vector<uint64_t> &data, int base) {
   std::cout << "Data: ";
+  size_t count{};
   for (auto data : data) {
     while (data > 0) {
+      count++;
       std::cout << (int)(data % base) << " ";
       data /= base;
     }
   }
   std::cout << std::endl;
+  std::cout <<count<<std::endl;
 }
 
-bool evenParity(const std::vector<unsigned int> &data) {
+bool evenParity(const std::vector<uint64_t> &data) {
   // Calcurate the number of 1's
   int oneCount = 0;
   for (auto temp : data) {
