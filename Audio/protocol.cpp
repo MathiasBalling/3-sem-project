@@ -33,17 +33,21 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
   unsigned int temp{};
   if (op <= Operation::STOP) {
     temp = 0; // Wrong function call
+    output.push_back(temp);
   } else if (op <= Operation::COORDINATE_REL) {
     // Operation that require floats
     output = dataFloatEncode(op, inputData);
   } else {
     temp = 0; // Not defined or e.g. strings
+    output.push_back(temp);
   }
 
   // Ensure even parity
-  output.push_back(temp);
   if (!evenParity(output)) {
     output.at(0) += 1;
+  }
+  for (auto res : output) {
+    std::cout << res << std::endl;
   }
   return dataBitsToDTMF(output);
 }
@@ -108,19 +112,20 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
     unsigned int res = (int)data;
     res += negative << 20;
     res += exponent << 21;
-
     // Insert into outputBits
-    for (int i = 0; i < COSTUM_FLOAT_SIZE_BYTES * 3; ++i) {
+    for (int i = 0; i < (COSTUM_FLOAT_SIZE_BYTES * 8); ++i) {
       if (baseIndex % (sizeof(unsigned int) * 8) == 0) {
         outputBits.push_back(temp);
         temp = 0;
+        baseIndex = 0;
       }
       temp += pow(2, baseIndex) * (res & 1);
       res >>= 1;
       baseIndex++;
     }
   }
-  outputBits.push_back(temp);
+  if (baseIndex != 0)
+    outputBits.push_back(temp);
 
   return outputBits;
 }
@@ -131,20 +136,28 @@ std::vector<unsigned int> dataStringEncode(const Operation op,
 }
 
 std::vector<DTMF> dataBitsToDTMF(const std::vector<unsigned int> &inputData) {
-  printData(inputData, 2);
   std::vector<DTMF> output;
   // Convert to DTMF
   output.push_back(DTMF::WALL); // Start flag
   DTMF lastDtmf = DTMF::WALL;
-  for (auto data : inputData) {
-    while (data) {
-      DTMF dtmf = (DTMF)(data % (unsigned int)BASE);
-      if (dtmf == lastDtmf) {
-        output.push_back(DTMF::DIVIDE);
-      }
-      output.push_back(dtmf);
-      lastDtmf = dtmf;
-      data /= (unsigned int)BASE;
+  auto tempData = inputData;
+  size_t count{};
+  while (!tempData.empty()) {
+    DTMF dtmf = (DTMF)(tempData.at(0) % (unsigned int)BASE);
+    if (dtmf == lastDtmf) {
+      output.push_back(DTMF::DIVIDE);
+    }
+    output.push_back(dtmf);
+    lastDtmf = dtmf;
+    tempData.at(0) /= (unsigned int)BASE;
+    count++;
+    if (tempData.at(0) == 0 && tempData.size() == 1) {
+      tempData.erase(tempData.begin());
+    } else if (count == 9) {
+      // Log14(uintMax)=8.405≈9
+      // We need 9 DTMF tones to represent a uintMax
+      tempData.erase(tempData.begin());
+      count = 0;
     }
   }
   output.push_back(DTMF::DIVIDE); // End flag
@@ -166,7 +179,6 @@ std::vector<unsigned int> DTMFtoData(std::queue<DTMF> sampleInput) {
   std::vector<unsigned int> sampleBits;
   unsigned int tempBits = 0;
   size_t baseIndex = 0;
-  bool isInserted = false;
 
   while (!sampleInput.empty()) {
     if (sampleInput.front() != DTMF::DIVIDE &&
@@ -176,23 +188,21 @@ std::vector<unsigned int> DTMFtoData(std::queue<DTMF> sampleInput) {
       baseIndex++;
 
       if (baseIndex % 9 == 0) {
-        // FIX: Possibly error here
+        // Log14(uintMax)=8.405≈9
+        // We need 9 DTMF tones to represent a uintMax
         sampleBits.push_back(tempBits);
         tempBits = 0;
-        isInserted = true;
+        baseIndex = 0;
       }
     }
     sampleInput.pop();
   }
-  if (!isInserted) {
+  if (baseIndex != 0) {
     sampleBits.push_back(tempBits);
   }
-  printData(sampleBits, 2);
   if (!evenParity(sampleBits)) {
-    std::cout << "ODD" << std::endl;
     return std::vector<unsigned int>{0};
   }
-  std::cout << "Even" << std::endl;
 
   return sampleBits;
 }
