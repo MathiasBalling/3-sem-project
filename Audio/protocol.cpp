@@ -19,9 +19,9 @@ std::vector<DTMF> dataToDTMF(Operation op) {
     temp = 0; // Error: Every operation over STOP need inputData or is not
     // defiend yet
   }
+  output.push_back(temp);
 
   // Ensure even parity
-  output.push_back(temp);
   if (!evenParity(output)) {
     output.at(0) += 1;
   }
@@ -46,9 +46,6 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
   if (!evenParity(output)) {
     output.at(0) += 1;
   }
-  for (auto res : output) {
-    std::cout << res << std::endl;
-  }
   return dataBitsToDTMF(output);
 }
 
@@ -57,15 +54,15 @@ std::vector<DTMF> dataToDTMF(Operation op, std::string inputData) {
   unsigned int temp{};
   if (op <= Operation::COORDINATE_REL) {
     temp = 0; // Wrong function call
+    output.push_back(temp);
   } else if (op <= Operation::STRING) {
-    // Operation that require floats
     output = dataStringEncode(op, inputData);
   } else {
     temp = 0; // Not defined
+    output.push_back(temp);
   }
 
   // Ensure even parity
-  output.push_back(temp);
   if (!evenParity(output)) {
     output.at(0) += 1;
   }
@@ -114,7 +111,7 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
     res += exponent << 21;
     // Insert into outputBits
     for (int i = 0; i < (COSTUM_FLOAT_SIZE_BYTES * 8); ++i) {
-      if (baseIndex % (sizeof(unsigned int) * 8) == 0) {
+      if (baseIndex % maxIndex == 0) {
         outputBits.push_back(temp);
         temp = 0;
         baseIndex = 0;
@@ -132,7 +129,39 @@ std::vector<unsigned int> dataFloatEncode(const Operation op,
 
 std::vector<unsigned int> dataStringEncode(const Operation op,
                                            const std::string &inputData) {
-  return std::vector<unsigned int>{};
+  std::vector<unsigned int> outputBits{};
+  if (inputData.size() > (pow(2, 7) - 1)) {
+    return outputBits; // To long data input
+  }
+  size_t baseIndex{1}; // Start after parity bit
+  size_t dataSize = 1 + inputData.size() * sizeof(char); // Operation
+  unsigned int temp{};
+  size_t maxIndex = sizeof(temp) * 8;
+  if (op <= Operation::COORDINATE_REL) {
+    return outputBits; // wrong function call
+  } else if (op == Operation::STRING) {
+    temp += pow(2, baseIndex) * dataSize;
+    baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
+    temp += pow(2, baseIndex) * (unsigned int)op;
+    baseIndex = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
+  } else {
+    return outputBits; // Not yet defined
+  }
+  for (auto data : inputData) {
+    for (size_t i = 0; i < (sizeof(char) * 8); ++i) {
+      if (baseIndex % maxIndex == 0) {
+        outputBits.push_back(temp);
+        temp = 0;
+        baseIndex = 0;
+      }
+      temp += pow(2, baseIndex) * (data & 1);
+      data >>= 1;
+      baseIndex++;
+    }
+  }
+  if (baseIndex != 0)
+    outputBits.push_back(temp);
+  return outputBits;
 }
 
 std::vector<DTMF> dataBitsToDTMF(const std::vector<unsigned int> &inputData) {
@@ -242,9 +271,81 @@ Operation getOperation(const std::vector<unsigned int> dataInput) {
 }
 
 std::vector<float> dataFloatDecode(std::vector<unsigned int> data) {
-  return std::vector<float>{};
+  std::vector<float> output;
+  float tempFloat{};
+  int exponent{};
+  size_t index{};
+  size_t floatIndex{};
+  // Remove parity bit
+  data.at(0) >>= 1;
+  size_t dataLength =
+      data.at(0) & (unsigned int)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
+  data.at(0) >>= HEADER_SIZE_BYTES * 8 - 1;
+  data.at(0) >>= OPERATION_SIZE_BYTES * 8;
+  dataLength -= OPERATION_SIZE_BYTES;
+  index = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
+
+  while (!data.empty() && dataLength > 0) {
+
+    int bit = data.at(0) & 1;
+
+    if (floatIndex < 20) {
+      // Mantissa
+      tempFloat += pow(2, floatIndex) * bit;
+    } else if (floatIndex == 20) {
+      // Sign
+      if (bit)
+        tempFloat *= -1;
+    } else if (floatIndex < 24) {
+      // Exponent
+      exponent += pow(2, floatIndex - 21) * bit;
+    }
+    if (floatIndex == (COSTUM_FLOAT_SIZE_BYTES * 8 - 1)) {
+      tempFloat *= pow(10, -exponent);
+      output.push_back(tempFloat);
+      floatIndex = 0;
+      tempFloat = 0;
+      exponent = 0;
+      dataLength -= COSTUM_FLOAT_SIZE_BYTES;
+    } else {
+      floatIndex++;
+    }
+    index++;
+    data.at(0) >>= 1;
+    if (index % (sizeof(unsigned int) * 8) == 0) {
+      index = 0;
+      data.erase(data.begin());
+    }
+  }
+  return output;
 }
-std::string dataStringDecode(std::vector<unsigned int> data) { return ""; }
+
+std::string dataStringDecode(std::vector<unsigned int> data) {
+  std::string output{};
+  size_t index{};
+  // Remove parity bit
+  data.at(0) >>= 1;
+  size_t dataLength =
+      data.at(0) & (unsigned int)(pow(2, HEADER_SIZE_BYTES * 7) - 1);
+  data.at(0) >>= HEADER_SIZE_BYTES * 8 - 1;
+  data.at(0) >>= OPERATION_SIZE_BYTES * 8;
+  dataLength -= OPERATION_SIZE_BYTES;
+  index = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
+  while (!data.empty() && dataLength > 0) {
+    char tempChar{};
+    for (size_t j = 0; j < 8; j++) {
+      tempChar += (data.at(0) & 1) << j;
+      data.at(0) >>= 1;
+      index++;
+      if (index % (sizeof(unsigned int) * 8) == 0) {
+        index = 0;
+        data.erase(data.begin());
+      }
+    }
+    output.push_back(tempChar);
+  }
+  return output;
+}
 
 // ---------------------------- Utils -------------------------------
 void printData(const std::vector<unsigned int> &data, int base) {
@@ -273,161 +374,3 @@ bool evenParity(const std::vector<unsigned int> &data) {
   }
   return true;
 }
-/*
-std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData = {}) {
-  long long int data = 0;
-  int insertIndex = 1;
-  // A long long int is 64 bits
-  // First 7 bits is the size of the data up to 2^8-1 = 255
-  int sizeOfData = 4; // The operation is the next 4 bits 2^4 = 16
-  if (op <= Operation::STOP) {
-    data += pow(2, insertIndex) * sizeOfData;
-  } else if (op > Operation::STOP) {
-    sizeOfData += 2 * FLOATSIZE;
-    data += pow(2, insertIndex) * sizeOfData;
-  }
-  insertIndex += HEADER_SIZE_BYTES;
-  // Next 4 bits is the operation
-  data += pow(2, insertIndex) * (int)op;
-  insertIndex += OPERATIONSIZE;
-  if (Operation::STOP < op) {
-    for (size_t i = 0; i < inputData.size(); i++) {
-      data += (long long int)(pow(2, insertIndex) * dataEncode(inputData[i]));
-      insertIndex += FLOATSIZE;
-    }
-  }
-
-  // Calcurate the parity bit
-  int oneCount = 0;
-  long long int tempData = data;
-  while (tempData) {
-    oneCount += tempData & 1;
-    tempData >>= 1;
-  }
-  // Make the data even parity
-  if (oneCount % 2) {
-    data += 1;
-  }
-
-  // Convert to DTMF
-  std::vector<DTMF> output;
-  output.push_back(DTMF::WALL); // Start flag
-  DTMF lastDtmf = DTMF::WALL;
-  while (data) {
-    DTMF dtmf = (DTMF)(data % BASE);
-    if (dtmf == lastDtmf) {
-      output.push_back(DTMF::DIVIDE);
-    }
-    output.push_back(dtmf);
-    lastDtmf = dtmf;
-    data /= BASE;
-  }
-  output.push_back(DTMF::DIVIDE); // End flag
-  output.push_back(DTMF::WALL);   // End flag
-  return output;
-}
-
-int dataEncode(float &inputData) {
-  int data = 0;
-  // XXX is exponent (3 bits)10^-N for 0<=N<=7
-  // E is the sign bit (1 bit) E=1 means -2^20=-1048576
-  // 00000000000000000000 is the mantissa (20 bits) 2^20 = 1048576
-  // XXX E00000000000000000000
-  bool negative = false;
-  if (inputData < 0) {
-  int exponent = 0;
-    negative = true;
-    inputData *= -1;
-  }
-  while ((inputData - (int)inputData != 0) && exponent < 8) {
-    inputData *= 10;
-    exponent++;
-  }
-  data = (int)inputData;
-  data += negative << 20;
-  data += exponent << 21;
-
-  return data;
-}
-
-std::pair<Operation, std::vector<float>> DTMFdecode(long long int &data) {
-  std::vector<float> output;
-  // Even parity check
-  // Calcurate the parity bit
-  int oneCount = 0;
-  long long int tempData = data;
-  while (tempData) {
-    oneCount += tempData & 1;
-    tempData >>= 1;
-  }
-  // Make the data even parity
-  if ((oneCount % 2) == 1) {
-    return std::make_pair(Operation::ERROR, std::vector<float>());
-  }
-
-  data >>= 1;
-
-  // Extract the data size from the first 6 bits of the header
-  short dataSize = data & 0b111111;
-  data >>= (int)HEADER_SIZE_BYTES;
-
-  // Extract the operation from the first 4 bits of the data
-  Operation op = (Operation)(data & 0b1111);
-  dataSize -= (int)OPERATIONSIZE;
-  data >>= (int)OPERATIONSIZE;
-
-  // Extract the floats from the rest of the data
-  for (int i = 0; i < dataSize; i++) {
-    float dataInFloat = 0;
-    dataInFloat = data & 0xFFFFF;
-    short exponent = (data >> 21) & 0b111;
-    dataInFloat *= pow(10, -exponent);
-    if (data >> 20 & 1) {
-      dataInFloat *= -1;
-    }
-    output.push_back(dataInFloat);
-    data >>= FLOATSIZE;
-    dataSize -= FLOATSIZE;
-  }
-
-  // Check if there is any data left
-  // If there is, then the data is corrupted
-  if (data != 0 || dataSize != 0) {
-    return std::make_pair(Operation::ERROR, std::vector<float>());
-  }
-
-  return std::make_pair(op, output);
-}
-
-std::pair<Operation, std::vector<float>> DTMFtoData(std::deque<DTMF> input) {
-  // Find the start flag
-  while (1) {
-    if (input.front() == DTMF::WALL) {
-      break;
-    }
-    input.erase(input.begin());
-    if (input.empty()) {
-      return std::make_pair(Operation::ERROR, std::vector<float>());
-    }
-  }
-  long long int data = 0;
-  int baseIndex = 0;
-  // Extract the data
-  for (size_t i = 0; i < input.size(); i++) {
-    if (input[i] != DTMF::DIVIDE && input[i] != DTMF::WALL) {
-      data += (long long int)(pow(BASE, baseIndex) * (long long int)input[i]);
-      baseIndex++;
-    }
-  }
-  return DTMFdecode(data);
-}
-
-void printData(long long int &data, int base) {
-  std::cout << "Data: ";
-  while (data > 0) {
-    std::cout << (int)(data % base) << " ";
-    data /= base;
-  }
-  std::cout << std::endl;
-}
-*/

@@ -33,6 +33,9 @@ public:
   void setLastDTMFCount(int count);
   std::vector<unsigned int> processInput();
 
+  void setMinMagnitude(float minMagnitude);
+  float getMinMagnitude();
+
 private:
   // PortAudio variables
   PaStreamParameters m_outputParameters;
@@ -42,6 +45,7 @@ private:
   State m_state = State::WAITING;
   int m_sampleRate = SAMPLE_RATE;
   float m_dTime = 1. / m_sampleRate;
+  float m_minMagnitude = (float)THRESHOLD_MAG_DETECTION;
   // Queue for sound objects
   std::queue<SoundObject> m_soundQueue;
 

@@ -177,6 +177,12 @@ std::vector<unsigned int> PAsound::processInput() {
   return res;
 }
 
+void PAsound::setMinMagnitude(float minMagnitude) {
+  m_minMagnitude = minMagnitude;
+}
+
+float PAsound::getMinMagnitude() { return m_minMagnitude; }
+
 int audioCallback(const void *m_inputBuffer, void *outputBuffer,
                   unsigned long framesPerBuffer,
                   const PaStreamCallbackTimeInfo *timeInfo,
@@ -190,7 +196,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
   switch (sound->getState()) {
   case State::WAITING: {
     dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
-                    (float *)m_inputBuffer);
+                    (float *)m_inputBuffer, sound->getMinMagnitude());
     if (dtmf == DTMF::WALL) {
       sound->insertInputBuffer(dtmf);
       sound->setLastDTMFCount(0);
@@ -201,7 +207,7 @@ int audioCallback(const void *m_inputBuffer, void *outputBuffer,
   case State::LISTENING: {
 
     dtmf = findDTMF(framesPerBuffer, sound->getSampleRate(),
-                    (float *)m_inputBuffer);
+                    (float *)m_inputBuffer, sound->getMinMagnitude());
     if (sound->getLastDTMF() == dtmf) {
       sound->setLastDTMFCount(sound->getLastDTMFCount() + 1);
     } else {

@@ -23,7 +23,8 @@ float goertzel_mag(int numSamples, float TARGET_FREQUENCY, int SAMPLING_RATE,
   return magnitude;
 }
 
-DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
+DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[],
+              float minMagnitude) {
   // DTMF frequencies
   float dtmfFreqMag[8];
   for (int i = 0; i < 8; i++) {
@@ -47,7 +48,7 @@ DTMF findDTMF(int numSamples, int SAMPLING_RATE, float data[]) {
   float meanMag =
       (dtmfFreqMag[indexLowFreqs] + dtmfFreqMag[indexHighFreqs - 4]) * 0.5;
   // Only consider the tone if the meanMag is greater than the threshold.
-  if (meanMag > (float)THRESHOLD_MAG_DETECTION) {
+  if (meanMag > minMagnitude) {
     return DTMF(indexLowFreqs * 4 + indexHighFreqs % 4);
   }
   return DTMF::ERROR;

@@ -1,12 +1,12 @@
 #include "consts.h"
 #include "protocol.h"
-#include <climits>
 #include <cstddef>
 #include <iostream>
 #include <queue>
 
 int main() {
-  std::vector<float> data = {-0.22};
+  std::vector<float> data = {-0.22, 0.22};
+  std::string dataString = "Mathias Balling Christiansen";
   std::vector<DTMF> dtmf = dataToDTMF(Operation::MOVEMENT, data);
   std::queue<DTMF> sampleInput;
   for (size_t i = 0; i < dtmf.size(); i++) {
@@ -17,9 +17,18 @@ int main() {
   std::cout << std::endl;
   auto res = DTMFtoData(sampleInput);
   for (auto data : res) {
-    std::cout << data << std::endl;
+    std::cout << data << " ";
   }
   std::cout << indexToOperation[(int)getOperation(res)] << std::endl;
+  if (getOperation(res) == Operation::MOVEMENT) {
+    auto resfloat = dataFloatDecode(res);
+    for (auto data : resfloat) {
+      std::cout << data << std::endl;
+    }
+  } else if (getOperation(res) == Operation::STRING) {
+    auto resstring = dataStringDecode(res);
+    std::cout << resstring << std::endl;
+  }
 
   /* std::vector<unsigned int> test{5}; */
   /* test.push_back(14); */

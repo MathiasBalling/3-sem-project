@@ -13,12 +13,15 @@ int main(int argc, char **argv) {
 
   float currentLinear = 0.0;
   float currentAngular = 0.0;
+  std::vector<unsigned int> data{};
+  Operation operation = Operation::ERROR;
+  std::vector<float> dataFloats{0, 0};
   while (1) {
     if (sound.getState() == State::PROCESSING) {
-
-      std::pair<Operation, std::vector<float>> input = sound.processInput();
-      std::cout << indexToOperation[(int)input.first] << std::endl;
-      switch (input.first) {
+      data = sound.processInput();
+      operation = getOperation(data);
+      std::cout << indexToOperation[(int)operation] << std::endl;
+      switch (operation) {
       case Operation::FORWARD: {
         currentLinear += 0.03;
         if (currentLinear > 0.22)
@@ -49,16 +52,26 @@ int main(int argc, char **argv) {
         break;
       }
       case Operation::MOVEMENT: {
-        currentLinear = input.second[0];
+        dataFloats = dataFloatDecode(data);
+        currentLinear = dataFloats[0];
         if (currentLinear < -0.22)
           currentLinear = -0.22;
         else if (currentLinear > 0.22)
           currentLinear = 0.22;
-        currentAngular = input.second[1];
+        currentAngular = dataFloats[1];
         if (currentAngular < -2.84)
           currentAngular = -2.84;
         else if (currentAngular > 2.84)
           currentAngular = 2.84;
+        break;
+      }
+      case Operation::UPDATE_MAG_THRESHOLD: {
+        dataFloats = dataFloatDecode(data);
+        sound.setMinMagnitude(dataFloats[0]);
+        break;
+      }
+      case Operation::STRING: {
+        std::cout << dataStringDecode(data) << std::endl;
         break;
       }
       case Operation::ERROR: {
@@ -67,7 +80,7 @@ int main(int argc, char **argv) {
       default:
         break;
       }
-      if (input.first != Operation::ERROR)
+      if (operation != Operation::ERROR)
         publisher->publish_vel(currentLinear, currentAngular);
     }
   }

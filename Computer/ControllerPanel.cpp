@@ -1,5 +1,6 @@
 #include "ControllerPanel.h"
 #include "consts.h"
+#include "protocol.h"
 #include <string>
 #include <thread>
 
@@ -34,7 +35,8 @@ void ControllerPanel::handleAudioInput() const {
   while (m_paSound->getState() != State::SENDING) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     if (m_paSound->getState() == State::PROCESSING) {
-      auto [op, data] = m_paSound->processInput();
+      auto data = m_paSound->processInput();
+      auto op = getOperation(data);
       wxLogMessage("Operation: %s", indexToOperation[(int)op]);
       if (op == Operation::MOVEMENT) {
         wxLogMessage("Linear: %f, Angular: %f", data[0], data[1]);
@@ -89,7 +91,7 @@ void ControllerPanel::OnKeyDown(wxKeyEvent &event) {
 
   // Prevent the user from spamming the keyboard
   m_isReadyToPlay = false;
-  m_timer.StartOnce(m_duration * 3); // 3 times the duration of a DTMF tone
+  m_timer.StartOnce(m_duration * 5); // 5 times the duration of a DTMF tone
 
   // Skip the event, so that it can be processed by other handlers
   /* event.Skip(); */
@@ -126,6 +128,13 @@ void ControllerPanel::OnButtonPressed(wxCommandEvent &event) {
       m_paSound->play(Operation::MOVEMENT,
                       {m_movement.first, m_movement.second}, m_duration);
       break;
+    case wxID_HIGHEST + 23:
+      m_paSound->stop();
+      break;
+    case wxID_HIGHEST + 24:
+      m_paSound->play(Operation::UPDATE_MAG_THRESHOLD,
+                      {m_paSound->getMinMagnitude()}, m_duration);
+      break;
     default:
       return;
     }
@@ -133,12 +142,32 @@ void ControllerPanel::OnButtonPressed(wxCommandEvent &event) {
 
   // Prevent the user from spamming the buttons
   m_isReadyToPlay = false;
-  m_timer.StartOnce(m_duration * 4);
+  m_timer.StartOnce(m_duration * 5);
 }
 
 void ControllerPanel::createLayout() {
   // Create main sizer for organizing all elements in the panel
   wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
+
+  // For magnification threshold
+  wxBoxSizer *magnificationThresholdSizer = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText *magnificationThresholdText =
+      new wxStaticText(this, wxID_ANY, wxT("Magnification threshold:"));
+  wxTextCtrl *magnificationThresholdCtrl = new wxTextCtrl(
+      this, wxID_ANY, std::to_string(m_paSound->getMinMagnitude()));
+  magnificationThresholdCtrl->SetValidator(wxTextValidator(wxFILTER_NUMERIC));
+  magnificationThresholdCtrl->SetMinSize(wxSize(70, -1));
+  magnificationThresholdCtrl->Bind(wxEVT_TEXT, [&](wxCommandEvent &event) {
+    m_paSound->setMinMagnitude(wxAtof(event.GetString()));
+  });
+  wxStaticText *magnificationThresholdUnitText =
+      new wxStaticText(this, wxID_ANY, wxT("1/fs"));
+  magnificationThresholdSizer->Add(magnificationThresholdText, 0,
+                                   wxALIGN_CENTRE_VERTICAL | wxALL, 5);
+  magnificationThresholdSizer->Add(magnificationThresholdCtrl, 0,
+                                   wxALIGN_CENTRE_VERTICAL);
+  magnificationThresholdSizer->Add(magnificationThresholdUnitText, 0,
+                                   wxALIGN_CENTRE_VERTICAL | wxLEFT, 5);
 
   // Create sizer for Durations
   wxBoxSizer *durationSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -222,23 +251,36 @@ void ControllerPanel::createLayout() {
   wxButton *rightButton =
       new wxButton(this, wxID_HIGHEST + 20, wxT("Right (d)"));
   rightButton->Bind(wxEVT_BUTTON, &ControllerPanel::OnButtonPressed, this);
+  wxButton *stopButton = new wxButton(this, wxID_HIGHEST + 21, wxT("Stop (x)"));
+  stopButton->Bind(wxEVT_BUTTON, &ControllerPanel::OnButtonPressed, this);
   // Create sizer for operation buttons and add them to sizer
   wxBoxSizer *movementButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
   movementButtonsSizer->Add(forwardButton, 1, wxEXPAND | wxALL, 5);
-  movementButtonsSizer->Add(leftButton, 1, wxEXPAND | wxALL, 5);
   movementButtonsSizer->Add(backwardButton, 1, wxEXPAND | wxALL, 5);
+  movementButtonsSizer->Add(leftButton, 1, wxEXPAND | wxALL, 5);
   movementButtonsSizer->Add(rightButton, 1, wxEXPAND | wxALL, 5);
+  movementButtonsSizer->Add(stopButton, 1, wxEXPAND | wxALL, 5);
 
-  wxButton *stopButton = new wxButton(this, wxID_HIGHEST + 21, wxT("Stop (x)"));
-  stopButton->Bind(wxEVT_BUTTON, &ControllerPanel::OnButtonPressed, this);
   wxButton *movementButton =
       new wxButton(this, wxID_HIGHEST + 22, wxT("Movement (m)"));
   movementButton->Bind(wxEVT_BUTTON, &ControllerPanel::OnButtonPressed, this);
+  wxButton *stopSoundButton =
+      new wxButton(this, wxID_HIGHEST + 23, wxT("Stop sound (q)"));
+  stopSoundButton->Bind(wxEVT_BUTTON, &ControllerPanel::OnButtonPressed, this);
+
+  wxButton *thresholdButton =
+      new wxButton(this, wxID_HIGHEST + 24, wxT("Set threshold"));
+  thresholdButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event) {
+    m_paSound->play(Operation::UPDATE_MAG_THRESHOLD,
+                    {m_paSound->getMinMagnitude()}, m_duration);
+  });
   wxBoxSizer *utilButtonSizer = new wxBoxSizer(wxHORIZONTAL);
   utilButtonSizer->Add(movementButton, 1, wxEXPAND | wxALL, 5);
-  utilButtonSizer->Add(stopButton, 1, wxEXPAND | wxALL, 5);
+  utilButtonSizer->Add(stopSoundButton, 1, wxEXPAND | wxALL, 5);
+  utilButtonSizer->Add(thresholdButton, 1, wxEXPAND | wxALL, 5);
 
   // Add sizers to main sizer
+  mainSizer->Add(magnificationThresholdSizer, 1, wxEXPAND | wxALL, 5);
   mainSizer->Add(durationSizer, 1, wxEXPAND | wxALL, 5);
   mainSizer->Add(movementSizer, 1, wxEXPAND | wxALL, 5);
   mainSizer->Add(movementButtonsSizer, 1, wxEXPAND | wxALL, 5);

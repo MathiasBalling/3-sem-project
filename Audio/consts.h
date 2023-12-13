@@ -57,8 +57,8 @@ enum class Operation {
   UPDATE_MAG_THRESHOLD,
   MOVEMENT,
   COORDINATE_REL,
-  STRING,
-  LIDAR
+  LIDAR,
+  STRING
 };
 
 const std::string indexToOperation[12] = {
@@ -67,7 +67,7 @@ const std::string indexToOperation[12] = {
     "Left",     "Right",
     "Stop",     "Update Magnetude Threshold",
     "Movement", "Relative Coordinate",
-    "String",   "LIDAR"};
+    "LIDAR",    "String"};
 
 const char indexToDtmf[16] = {'1', '2', '3', 'A', '4', '5', '6', 'B',
                               '7', '8', '9', 'C', '*', '0', '#', 'D'};
