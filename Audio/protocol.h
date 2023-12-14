@@ -9,8 +9,8 @@
 std::array<float, 2> DTMFtoFreq(DTMF dt);
 
 // Handle operations and data from application
-std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData);
-std::vector<DTMF> dataToDTMF(Operation op, std::string inputData);
+std::vector<DTMF> dataToDTMF(Operation op, const std::vector<float> &inputData);
+std::vector<DTMF> dataToDTMF(Operation op, const std::string &inputData);
 std::vector<DTMF> dataToDTMF(Operation op);
 
 // Data in bits to DTMF

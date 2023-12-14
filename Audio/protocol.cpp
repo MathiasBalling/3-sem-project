@@ -28,13 +28,14 @@ std::vector<DTMF> dataToDTMF(Operation op) {
   return dataBitsToDTMF(output);
 }
 
-std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
+std::vector<DTMF> dataToDTMF(Operation op,
+                             const std::vector<float> &inputData) {
   std::vector<uint64_t> output{};
   uint64_t temp{};
   if (op <= Operation::STOP) {
     temp = 0; // Wrong function call
     output.push_back(temp);
-  } else if (op <= Operation::COORDINATE_REL) {
+  } else if (op <= Operation::LIDAR) {
     // Operation that require floats
     output = dataFloatEncode(op, inputData);
   } else {
@@ -49,7 +50,7 @@ std::vector<DTMF> dataToDTMF(Operation op, std::vector<float> inputData) {
   return dataBitsToDTMF(output);
 }
 
-std::vector<DTMF> dataToDTMF(Operation op, std::string inputData) {
+std::vector<DTMF> dataToDTMF(Operation op, const std::string &inputData) {
   std::vector<uint64_t> output{};
   uint64_t temp{};
   if (op <= Operation::COORDINATE_REL) {
@@ -81,7 +82,7 @@ std::vector<uint64_t> dataFloatEncode(const Operation op,
   size_t maxIndex = sizeof(temp) * 8;
   if (op <= Operation::STOP) {
     return outputBits; // wrong function call
-  } else if (op <= Operation::COORDINATE_REL) {
+  } else if (op <= Operation::LIDAR) {
     temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
     temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;
@@ -102,13 +103,18 @@ std::vector<uint64_t> dataFloatEncode(const Operation op,
       negative = true;
       data *= -1;
     }
-    while ((data - (int)data != 0) && exponent < 8) {
+    while ((data - (int)data > 0) && exponent < 8 &&
+           (int)data * 10 < (pow(2, 20) - 1)) {
       data *= 10;
       exponent++;
     }
     uint64_t res = (int)data;
+    std::cout << "data:" << (int)(pow(2, 20) - 1) << std::endl;
+    std::cout << "Test:" << res << std::endl;
     res += negative << 20;
     res += exponent << 21;
+    std::cout << "negative:" << negative << std::endl;
+    std::cout << "exponent:" << exponent << std::endl;
     // Insert into outputBits
     for (int i = 0; i < (COSTUM_FLOAT_SIZE_BYTES * 8); ++i) {
       if (baseIndex % maxIndex == 0) {
@@ -217,8 +223,8 @@ std::vector<uint64_t> DTMFtoData(std::queue<DTMF> sampleInput) {
       baseIndex++;
 
       if (baseIndex % 17 == 0) {
-      // Log14(uint64_tMax)=16.81≈17
-      // We need 17 DTMF tones to represent a uint64_tMax
+        // Log14(uint64_tMax)=16.81≈17
+        // We need 17 DTMF tones to represent a uint64_tMax
         sampleBits.push_back(tempBits);
         tempBits = 0;
         baseIndex = 0;
@@ -276,6 +282,7 @@ std::vector<float> dataFloatDecode(std::vector<uint64_t> data) {
   int exponent{};
   size_t index{};
   size_t floatIndex{};
+  size_t maxIndex = sizeof(uint64_t) * 8;
   // Remove parity bit
   data.at(0) >>= 1;
   size_t dataLength =
@@ -284,6 +291,7 @@ std::vector<float> dataFloatDecode(std::vector<uint64_t> data) {
   data.at(0) >>= OPERATION_SIZE_BYTES * 8;
   dataLength -= OPERATION_SIZE_BYTES;
   index = (HEADER_SIZE_BYTES + OPERATION_SIZE_BYTES) * 8;
+  std::cout << "Data: " << data.at(0) << std::endl;
 
   while (!data.empty() && dataLength > 0) {
 
@@ -301,7 +309,7 @@ std::vector<float> dataFloatDecode(std::vector<uint64_t> data) {
       exponent += (uint64_t)pow(2, floatIndex - 21) * bit;
     }
     if (floatIndex == (COSTUM_FLOAT_SIZE_BYTES * 8 - 1)) {
-      tempFloat *= (uint64_t)pow(10, -exponent);
+      tempFloat *= pow(10, -exponent);
       output.push_back(tempFloat);
       floatIndex = 0;
       tempFloat = 0;
@@ -312,7 +320,7 @@ std::vector<float> dataFloatDecode(std::vector<uint64_t> data) {
     }
     index++;
     data.at(0) >>= 1;
-    if (index % (sizeof(uint64_t) * 8) == 0) {
+    if (index % maxIndex == 0) {
       index = 0;
       data.erase(data.begin());
     }
@@ -351,15 +359,15 @@ std::string dataStringDecode(std::vector<uint64_t> data) {
 void printData(const std::vector<uint64_t> &data, int base) {
   std::cout << "Data: ";
   size_t count{};
-  for (auto data : data) {
-    while (data > 0) {
+  for (auto d : data) {
+    while (d > 0) {
       count++;
-      std::cout << (int)(data % base) << " ";
-      data /= base;
+      std::cout << (int)(d % base) << " ";
+      d /= base;
     }
   }
   std::cout << std::endl;
-  std::cout <<count<<std::endl;
+  std::cout << count << std::endl;
 }
 
 bool evenParity(const std::vector<uint64_t> &data) {

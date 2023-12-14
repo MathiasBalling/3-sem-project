@@ -36,15 +36,18 @@ file(GLOB ROBOT_SRC Robot/*.cpp Robot/*.h)
 add_executable(AudioComputer
 ${COMPUTER_SRC}
 ${AUDIO_SRC})
-target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wnon-virtual-dtor -Wcast-align -Wunused -Woverloaded-virtual -Werror=vla -Wmisleading-indentation -Wnull-dereference)
+# target_compile_options(AudioComputer PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wnon-virtual-dtor
+#     -Wold-style-cast -Wcast-align -Wzero-as-null-pointer-constant
+#     -Wunused -Woverloaded-virtual -Wpedantic -Wconversion
+#     -Wsign-conversion -Wfloat-conversion -Wformat=2
+#     -Werror=vla -Wmisleading-indentation
+#       -Wnull-dereference)
 target_link_libraries(AudioComputer
 ${wxWidgets_LIBRARIES}
 ${PORTAUDIO_DIRS})
 
 # Tests--------------------------------------------------------------
-add_executable(Prot Tests/protocol/prot.cpp ${AUDIO_SRC})
-target_compile_options(Prot PRIVATE -Wall -Wextra -Wpedantic)
-target_link_libraries(Prot ${PORTAUDIO_DIRS})
 
 add_executable(Goert Tests/goertzel/goert.cpp ${AUDIO_SRC})
 target_link_libraries(Goert ${PORTAUDIO_DIRS})

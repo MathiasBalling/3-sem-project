@@ -271,6 +271,7 @@ void ControllerPanel::createLayout() {
   wxButton *thresholdButton =
       new wxButton(this, wxID_HIGHEST + 24, wxT("Set threshold"));
   thresholdButton->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event) {
+    (void)event; // To prevent unused variable warning
     m_paSound->play(Operation::UPDATE_MAG_THRESHOLD,
                     {m_paSound->getMinMagnitude()}, m_duration);
   });

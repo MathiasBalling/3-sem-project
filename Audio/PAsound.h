@@ -44,7 +44,7 @@ private:
   PaError m_err;
   State m_state = State::WAITING;
   int m_sampleRate = SAMPLE_RATE;
-  float m_dTime = 1. / m_sampleRate;
+  float m_dTime = 1.f / m_sampleRate;
   float m_minMagnitude = (float)THRESHOLD_MAG_DETECTION;
   // Queue for sound objects
   std::queue<SoundObject> m_soundQueue;
