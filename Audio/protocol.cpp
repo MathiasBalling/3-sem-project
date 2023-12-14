@@ -109,12 +109,8 @@ std::vector<uint64_t> dataFloatEncode(const Operation op,
       exponent++;
     }
     uint64_t res = (int)data;
-    std::cout << "data:" << (int)(pow(2, 20) - 1) << std::endl;
-    std::cout << "Test:" << res << std::endl;
     res += negative << 20;
     res += exponent << 21;
-    std::cout << "negative:" << negative << std::endl;
-    std::cout << "exponent:" << exponent << std::endl;
     // Insert into outputBits
     for (int i = 0; i < (COSTUM_FLOAT_SIZE_BYTES * 8); ++i) {
       if (baseIndex % maxIndex == 0) {

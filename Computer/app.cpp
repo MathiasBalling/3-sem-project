@@ -28,7 +28,7 @@ IMPLEMENT_APP(ControllerApp)
 
 // Define the controller frame (window)
 ControllerFrame::ControllerFrame(const wxString &title)
-    : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(600, 300)) {
+    : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(600, 400)) {
   // Create a logger window
   m_logger = new wxLogWindow(this, "Audio log", true, false);
   m_logger->SetTimestamp("%H:%M:%S");

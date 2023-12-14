@@ -146,6 +146,20 @@ bool PAsound::isQueueEmpty() { return m_soundQueue.empty(); }
 std::queue<SoundObject> *PAsound::getQueue() { return &m_soundQueue; }
 
 void PAsound::play(Operation op, std::vector<float> data, int duration) {
+  std::vector<DTMF> send;
+  if (data.empty()) {
+    send = dataToDTMF(op);
+  } else {
+    send = dataToDTMF(op, data);
+  }
+  for (auto dtmf : send) {
+    std::array<float, 2> freqs = DTMFtoFreq(dtmf);
+    int samples = duration * m_sampleRate / 1000;
+    SoundObject sound({freqs, samples, 0, 0});
+    m_soundQueue.push(sound);
+  }
+}
+void PAsound::play(Operation op, std::string data, int duration) {
   std::vector<DTMF> send = dataToDTMF(op, data);
   for (auto dtmf : send) {
     std::array<float, 2> freqs = DTMFtoFreq(dtmf);

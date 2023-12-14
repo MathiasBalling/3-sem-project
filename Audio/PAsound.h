@@ -13,8 +13,9 @@ public:
   ~PAsound();
   bool init(bool verbose = false, State state = State::WAITING);
   void findDevices();
-  void play(Operation op, std::vector<float> data = {},
+  void play(Operation op, std::vector<float> data,
             int duration = (int)DURATION_MS);
+  void play(Operation op, std::string data, int duration = (int)DURATION_MS);
   void play(DTMF dtmf, int duration = (int)DURATION_MS);
   void stop();
   bool isQueueEmpty();
