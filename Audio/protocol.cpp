@@ -15,7 +15,7 @@ std::vector<DTMF> dataToDTMF(Operation op) {
     temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
     temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;
-  } else if (op > Operation::STOP) {
+  } else {
     temp = 0; // Error: Every operation over STOP need inputData or is not
     // defiend yet
   }
@@ -82,7 +82,7 @@ std::vector<uint64_t> dataFloatEncode(const Operation op,
   size_t maxIndex = sizeof(temp) * 8;
   if (op <= Operation::STOP) {
     return outputBits; // wrong function call
-  } else if (op <= Operation::LIDAR) {
+  } else if (op <= Operation::COORDINATE_REL) {
     temp += (uint64_t)pow(2, baseIndex) * dataSize;
     baseIndex = (size_t)HEADER_SIZE_BYTES * 8;
     temp += (uint64_t)pow(2, baseIndex) * (uint64_t)op;

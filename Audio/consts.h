@@ -47,6 +47,7 @@ enum class DTMF {
 };
 
 enum class Operation {
+  // Operations for sending no data
   ERROR,
   ACKNOWLEDGE,
   FORWARD,
@@ -54,10 +55,13 @@ enum class Operation {
   LEFT,
   RIGHT,
   STOP,
+  // Operations for sending floats
+  UPDATE_FADE_STEPS,
   UPDATE_MAG_THRESHOLD,
   MOVEMENT,
-  COORDINATE_REL,
   LIDAR,
+  COORDINATE_REL,
+  // Operations for sending chars
   STRING
 };
 

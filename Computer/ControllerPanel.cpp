@@ -92,7 +92,7 @@ void ControllerPanel::OnKeyDown(wxKeyEvent &event) {
 
   // Prevent the user from spamming the keyboard
   m_isReadyToPlay = false;
-  m_timer.StartOnce(m_duration * 5); // 5 times the duration of a DTMF tone
+  m_timer.StartOnce(m_duration * 4); // 4 times the duration of a DTMF tone
 
   // Skip the event, so that it can be processed by other handlers
   /* event.Skip(); */
@@ -149,7 +149,7 @@ void ControllerPanel::OnButtonPressed(wxCommandEvent &event) {
 
   // Prevent the user from spamming the buttons
   m_isReadyToPlay = false;
-  m_timer.StartOnce(m_duration * 5);
+  m_timer.StartOnce(m_duration * 4);
 }
 
 void ControllerPanel::createLayout() {
