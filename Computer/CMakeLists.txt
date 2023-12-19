@@ -1,5 +1,9 @@
 project(AudioComputer CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_ExPORT_COMPILE_COMMANDS ON)
+
 # Find wxWidgets
 find_package(wxWidgets REQUIRED COMPONENTS core base)
 if(wxWidgets_USE_FILE) # not defined in CONFIG mode

@@ -1,4 +1,9 @@
 project(Protocol)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_PARALLEL_LEVEL 10)
+
 # Use PkgConfig to find portaudio
 find_package(PkgConfig REQUIRED)
 
