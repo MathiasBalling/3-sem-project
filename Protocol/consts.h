@@ -16,6 +16,7 @@
 // Time: 150/48000 = 3.125 ms
 #define THRESHOLD_MAG_DETECTION (50)
 // Threshold magnetude for detemining if a DTMF is sampled.
+// Can be modified from GUI!
 
 // Constants for protocol
 #define BASE (14)

@@ -1,4 +1,3 @@
-#include "PAsound.h"
 #include "consts.h"
 #include "goertzel.h"
 #include "protocol.h"

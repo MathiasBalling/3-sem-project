@@ -30,15 +30,26 @@ int PAsound::getSampleRate() { return m_sampleRate; }
 
 float PAsound::getDTime() { return m_dTime; }
 
+std::array<float, 2> DTMFtoFreq(DTMF dt) {
+  std::array<float, 2> result;
+  result[0] = dtmf_freqs[(int)dt / 4];
+  result[1] = dtmf_freqs[(int)dt % 4 + 4];
+  return result;
+};
+
 void PAsound::insertInputBuffer(DTMF input) {
   m_inputBuffer.push(input);
   m_lastDTMF = input;
 }
 
 DTMF PAsound::getLastDTMF() const { return m_lastDTMF; }
+
 void PAsound::setLastDTMF(DTMF dtmf) { m_lastDTMF = dtmf; }
+
 int PAsound::getLastDTMFCount() const { return m_lastDTMFCount; }
+
 void PAsound::setLastDTMFCount(int count) { m_lastDTMFCount = count; }
+
 DTMF PAsound::getLastInput() const {
   if (!m_inputBuffer.empty()) {
     return m_inputBuffer.back();
@@ -46,13 +57,6 @@ DTMF PAsound::getLastInput() const {
     return DTMF::ERROR;
   }
 }
-
-std::array<float, 2> DTMFtoFreq(DTMF dt) {
-  std::array<float, 2> result;
-  result[0] = dtmf_freqs[(int)dt / 4];
-  result[1] = dtmf_freqs[(int)dt % 4 + 4];
-  return result;
-};
 
 void PAsound::findDevices() {
   int numDevices = Pa_GetDeviceCount();
